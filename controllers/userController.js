@@ -1,7 +1,7 @@
-import UserService from "../services/userService";
+import UserService from "../services/UserService.js";
 
 export class UserController {
-  async getUserProfile(req, res) {
+  static async getUserProfile(req, res) {
     const token = req.headers.authorization?.split("Bearer ")[1];
 
     if (!token) {

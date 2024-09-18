@@ -1,6 +1,6 @@
 import admin from "firebase-admin";
 
-export class UserService {
+class UserService {
     static async getUserProfile(token) {
         try {
             const decodedToken = await admin.auth().verifyIdToken(token);
@@ -14,3 +14,5 @@ export class UserService {
         }
     }
 }
+
+export default UserService;
