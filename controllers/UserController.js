@@ -37,7 +37,7 @@ export class UserController {
     const token = req.headers.authorization?.split("Bearer ")[1];
 
     if (!token) {
-      res.status(40a).send("Unauthorized");
+      res.status(401).send("Unauthorized");
     }
     try {
       const qrCodeUrl = await this.userService.getUserQrCode(token);
