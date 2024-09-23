@@ -3,6 +3,25 @@ export class UserService {
         this.admin = firebaseAdmin;
     }
 
+    async adminCheck(token) {
+        try {
+            const decodedToken = await admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+
+            const userDoc = await admin.firestore().collection('users').doc(uid).get();
+
+            if (userDoc.exists && userDoc.data().role === 'Admin') {
+                res.json({ isAdmin: true });
+            } else {
+                res.json({ isAdmin: false });
+            }
+        } catch (error) {
+            console.error('Error checking admin status:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+
+    }
+
     async getUserProfile(token) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
