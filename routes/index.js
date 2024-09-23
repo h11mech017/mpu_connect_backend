@@ -11,7 +11,7 @@ export function setupRoutes() {
     router.get("admin/check", (req, res) => controllers.userController.checkAdmin(req, res));
 
     //User routes
-    router.get("user/profile", (req, res) => controllers.userController.getUserProfile(req, res));
+    router.get("/user/profile", (req, res) => controllers.userController.getUserProfile(req, res));
     router.get("user/qr-code", (req, res) => controllers.userController.getUserQrCode(req, res));
     
     return router;
