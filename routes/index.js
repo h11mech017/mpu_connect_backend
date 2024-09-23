@@ -12,7 +12,7 @@ export function setupRoutes() {
 
     //User routes
     router.get("/user/profile", (req, res) => controllers.userController.getUserProfile(req, res));
-    router.get("/user/qr-code", (req, res) => controllers.userController.getUserQrCode(req, res));
+    router.get("user/qr-code", (req, res) => controllers.userController.getUserQrCode(req, res));
     
     return router;
 }
