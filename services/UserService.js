@@ -36,7 +36,8 @@ export class UserService {
 
                 return {
                     ...userData['Student Info'],
-                    'Program Name': await programDoc.data()['Program Name']
+                    'Program Name': await programDoc.data()['Program Name'],
+                    'Language': await programDoc.data()['Language']
                 }
             }
 
