@@ -5,19 +5,19 @@ export class UserService {
 
     async adminCheck(token) {
         try {
-            const decodedToken = await admin.auth().verifyIdToken(token);
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
 
-            const userDoc = await admin.firestore().collection('users').doc(uid).get();
+            const userRef = await this.admin.firestore().collection('users').doc(uid);
+            const userDoc = await userRef.get();
 
-            if (userDoc.exists && userDoc.data().role === 'Admin') {
-                res.json({ isAdmin: true });
+            if (userDoc.exists && userDoc.data()['Role'] === 'Admin') {
+                return true;
             } else {
-                res.json({ isAdmin: false });
+                return false;
             }
         } catch (error) {
-            console.error('Error checking admin status:', error);
-            res.status(500).json({ error: 'Internal server error' });
+            throw new Error(error.message);
         }
 
     }
