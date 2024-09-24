@@ -26,8 +26,19 @@ export class UserService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
-            const userRef = this.admin.firestore().collection("users").doc(uid);
-            const userDoc = await userRef.get();
+            const userRef = await this.admin.firestore().collection("users").doc(uid);
+            const userDoc = await userRef.get()
+            const userData = await userDoc.data();
+            if (userData['Role'] === 'Student') {
+                const studentProgramCode = userData['Student Info']['Program Code'];
+                const programRef = await this.admin.firestore().collection("programs").doc(studentProgramCode);
+                const programDoc = await programRef.get();
+
+                return {
+                    ...userData['Student Info'],
+                    'Program Name': await programDoc.data()['Program Name']
+                }
+            }
 
             return userDoc.data();
         } catch (error) {
