@@ -3,12 +3,29 @@ export class ParkingService {
         this.admin = firebaseAdmin;
     }
 
+    async getApplication(token) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+
+            if (this.admin.firestore().collection("parking").doc(uid)) {
+                const applicationRef = await this.admin.firestore().collection("parking").doc(uid);
+                const applicationDoc = await applicationRef.get();
+                return applicationDoc.data();
+            } else {
+                return null
+            }
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
     async applyForParking(token, form) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
 
-            if (this.admin.firestore().collection("parking").doc(uid).exists) {
+            if (this.admin.firestore().collection("parking").doc(uid)) {
                 throw new Error("You have already applied for parking");
 
             } else {
@@ -21,7 +38,9 @@ export class ParkingService {
                     'Name': userData['Student Info']['Name'],
                     'Student ID': userData['Student Info']['Student ID'],
                     'Applied At': new Date(),
-                    'Status': 'Pending'
+                    'Status': 'Pending',
+                    'Card valid till': userData['Card valid till']
+
                 });
             }
         } catch (error) {

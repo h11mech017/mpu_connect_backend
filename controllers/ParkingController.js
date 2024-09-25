@@ -2,7 +2,26 @@ export class ParkingController {
     constructor(parkingService) {
         this.parkingService = parkingService;
     }
+
+    async getApplication(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1];
     
+        if (!token) {
+        res.status(401).send("Unauthorized");
+        }
+
+        try {
+        const application = await this.parkingService.getApplication(token);
+        if (!application) {
+            return res.status(404).send("No application found");
+        }
+        return res.status(200).send(application);
+        } catch (error) {
+        console.error("Error getting application:", error);
+        return res.status(500).send("Internal Server Error");
+        }
+    }
+
     async applyForParking(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1];
     
