@@ -1,3 +1,4 @@
+
 export class AdminService {
     constructor(admin) {
         this.admin = admin;
@@ -23,11 +24,33 @@ export class AdminService {
 
     async getParkingApplications() {
         try {
-            const applicationsRef = await this.admin.firestore().collection('parking').get();
-            const applications = applicationsRef.docs.map(doc => doc.data());
+            const applicationsRef = this.admin.firestore().collection('parking');
+            const applications = await applicationsRef.get().then((querySnapshot) => {
+                const applications = [];
+                querySnapshot.forEach((doc) => {
+                  applications.push({
+                    id: doc.id, 
+                    ...doc.data(),
+                  })
+                })
+                return applications
+            }
+            )
             return applications;
         } catch (error) {
             throw new Error(error.message);
+        }
+    }
+
+    async updateParkingApplicationStatus(applicationId, status) {
+        try {
+            const applicationRef = this.admin.firestore().collection('parking').doc(applicationId);
+            await applicationRef.update({
+                'Status': status
+            });
+            return true
+        } catch (error) {
+            return false
         }
     }
 }

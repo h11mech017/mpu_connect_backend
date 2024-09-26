@@ -14,11 +14,14 @@ export class UserService {
                 const studentProgramCode = userData['Student Info']['Program Code'];
                 const programRef = await this.admin.firestore().collection("programs").doc(studentProgramCode);
                 const programDoc = await programRef.get();
+                const programData = programDoc.data();
+                const facultyDoc = await ((await this.admin.firestore().collection("faculties").doc(await programData['Faculty'])).get());
 
                 return {
                     ...userData['Student Info'],
-                    'Program Name': await programDoc.data()['Program Name'],
-                    'Language': await programDoc.data()['Language']
+                    'Program Name': programData['Program Name'],
+                    'Language': programData['Language'],
+                    'Faculty': facultyDoc.data()['Faculty Name']
                 }
             }
 

@@ -27,13 +27,38 @@ export class AdminController {
         try {
             const isAdmin = await this.adminService.checkAdmin(token);
             if (!isAdmin) {
-                return res.status(401).send("Unauthorized");
+                return res.status(403).send("Forbidden");
             }
 
             const applications = await this.adminService.getParkingApplications();
             return res.status(200).send(applications);
         } catch (error) {
             console.error("Error in getParkingApplications:", error);
+            return res.status(500).send("Internal Server Error");
+        }
+    }
+
+    async updateParkingApplicationStatus(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1];
+        const { id, data } = req.body;
+
+        if (!token) {
+            res.status(401).send("Unauthorized");
+        }
+        try {
+            const isAdmin = await this.adminService.checkAdmin(token);
+            if (!isAdmin) {
+                return res.status(403).send("Forbidden");
+            }
+
+            const updated = await this.adminService.updateParkingApplicationStatus(id, data);
+            if (updated) {
+                return res.status(200).send("Updated");
+            } else {
+                return res.status(500).send("Internal Server Error");
+            }
+        } catch (error) {
+            console.error("Error in updateParkingApplicationStatus:", error);
             return res.status(500).send("Internal Server Error");
         }
     }
