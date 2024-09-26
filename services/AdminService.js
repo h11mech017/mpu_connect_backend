@@ -3,7 +3,7 @@ export class AdminService {
         this.admin = admin;
     }
 
-    async adminCheck(token) {
+    async checkAdmin(token) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
@@ -16,6 +16,16 @@ export class AdminService {
             } else {
                 return false;
             }
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    async getParkingApplications() {
+        try {
+            const applicationsRef = await this.admin.firestore().collection('parking').get();
+            const applications = applicationsRef.docs.map(doc => doc.data());
+            return applications;
         } catch (error) {
             throw new Error(error.message);
         }

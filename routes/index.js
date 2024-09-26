@@ -8,7 +8,8 @@ export function setupRoutes() {
     const controllers = createControllers(services);
 
     //Admin routes
-    router.get("/admin/check", (req, res) => controllers.AdminController.checkAdmin(req, res));
+    router.get("/admin/check", (req, res) => controllers.adminController.checkAdmin(req, res));
+    router.get("/admin/parking/applications", (req, res) => controllers.adminController.getParkingApplications(req, res));
 
     //User routes
     router.get("/user/profile", (req, res) => controllers.userController.getUserProfile(req, res));

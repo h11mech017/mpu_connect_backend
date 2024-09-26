@@ -6,7 +6,7 @@ import { AdminService } from "./AdminService.js";
 export function createServices() {
     return {
       userService: new UserService(admin),
-      AdminService: new AdminService(admin),
+      adminService: new AdminService(admin),
       parkingService: new ParkingService(admin),
     };
   }

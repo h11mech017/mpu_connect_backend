@@ -5,7 +5,7 @@ import { UserController } from "./UserController.js";
 export function createControllers(services) {
   return {
     userController: new UserController(services.userService),
-    AdminController: new AdminController(services.AdminService),
+    adminController: new AdminController(services.adminService),
     parkingController: new ParkingController(services.parkingService),
   };
 }
