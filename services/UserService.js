@@ -9,7 +9,7 @@ export class UserService {
             const uid = decodedToken.uid;
             const userRef = await this.admin.firestore().collection("users").doc(uid);
             const userDoc = await userRef.get()
-            const userData = await userDoc.data();
+            const userData = await userDoc.data()
             if (userData['Role'] === 'Student') {
                 const studentProgramCode = userData['Student Info']['Program Code'];
                 const programRef = await this.admin.firestore().collection("programs").doc(studentProgramCode);
@@ -18,14 +18,14 @@ export class UserService {
                 const facultyDoc = await ((await this.admin.firestore().collection("faculties").doc(await programData['Faculty'])).get());
 
                 return {
-                    ...userData['Student Info'],
+                    ...userData,
                     'Program Name': programData['Program Name'],
                     'Language': programData['Language'],
                     'Faculty': facultyDoc.data()['Faculty Name']
                 }
             }
 
-            return userDoc.data();
+            return userData
         } catch (error) {
             throw new Error(error.message);
         }
