@@ -44,7 +44,6 @@ export class LockerService {
                         await userRef.update({
                             'Student Info.Locker': firstLocker.id
                         })
-                        await availableLockers.shift()
                     }
                 }
             }
