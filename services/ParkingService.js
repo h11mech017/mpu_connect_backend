@@ -3,7 +3,7 @@ export class ParkingService {
         this.admin = firebaseAdmin;
     }
 
-    async getApplication(token) {
+    async getParkingApplication(token) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;

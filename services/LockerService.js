@@ -3,6 +3,33 @@ export class LockerService {
         this.admin = firebaseAdmin;
     }
 
+    async getUserLocker(token) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+
+            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const userDoc = await userRef.get();
+            const userData = userDoc.data();
+            if (userData['Role'] === 'Student') {
+                if (userData['Student Info']['Locker']) {
+                    const lockerRef = this.admin.firestore().collection("lockers").doc(userData['Student Info']['Locker']);
+                    const lockerDoc = await lockerRef.get();
+                    const lockerData = lockerDoc.data();
+                    return {
+                        'Locker No.': lockerDoc.id,
+                        'Locker Location': lockerData['Location']
+                    }
+                }
+                else {
+                    throw new Error("You have not applied for a locker");
+                }
+            }
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
     async applyForLocker(token) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);

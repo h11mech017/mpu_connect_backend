@@ -3,7 +3,7 @@ export class ParkingController {
         this.parkingService = parkingService;
     }
 
-    async getApplication(req, res) {
+    async getParkingApplication(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1];
     
         if (!token) {
@@ -11,7 +11,7 @@ export class ParkingController {
         }
 
         try {
-        const application = await this.parkingService.getApplication(token);
+        const application = await this.parkingService.getParkingApplication(token);
         if (!application) {
             return res.status(404).send("No application found");
         }

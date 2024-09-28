@@ -16,8 +16,9 @@ export function setupRoutes() {
     router.get("/user/profile", (req, res) => controllers.userController.getUserProfile(req, res));
     router.get("/user/qr-code", (req, res) => controllers.userController.getUserQrCode(req, res));
     router.get("/user/faculty", (req, res) => controllers.userController.getUserFaculty(req, res));
-    router.get("/user/parking/status", (req, res) => controllers.parkingController.getApplication(req, res));
+    router.get("/user/parking/status", (req, res) => controllers.parkingController.getParkingApplication(req, res));
     router.post("/user/parking/apply", (req, res) => controllers.parkingController.applyForParking(req, res));
+    router.get("/user/locker/status", (req, res) => controllers.lockerController.getUserLocker(req, res));
     router.post("/user/locker/apply", (req, res) => controllers.lockerController.applyForLocker(req, res));
     
     return router;
