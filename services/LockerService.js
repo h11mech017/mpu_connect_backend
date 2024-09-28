@@ -17,7 +17,7 @@ export class LockerService {
                     const lockerDoc = await lockerRef.get();
                     const lockerData = lockerDoc.data();
                     return {
-                        'Locker No.': lockerDoc.id,
+                        'Locker No': lockerDoc.id,
                         'Locker Location': lockerData['Location'],
                         'Applied At': lockerData['Applied At']
                     }
