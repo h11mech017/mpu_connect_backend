@@ -46,4 +46,19 @@ export class UserService {
             throw new Error(error.message);
         }
     }
+
+    async getUserFaculty(token) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+            const userRef = await this.admin.firestore().collection("users").doc(uid);
+            const userDoc = await userRef.get()
+            const userData = await userDoc.data()
+            const userFaculty = userData['Faculty']
+            
+            return userFaculty
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
 }
