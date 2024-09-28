@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { UserService } from "./UService.js";
+import { UserService } from "./UserService.js";
 import { ParkingService } from "./ParkingService.js";
 import { AdminService } from "./AdminService.js";
 import { LockerService } from "./LockerService.js";
