@@ -8,24 +8,46 @@ export class LockerService {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
 
-            const lockerAppDoc = this.admin.firestore().collection("lockers").doc(uid).get();
+            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const userDoc = await userRef.get();
+            const userData = userDoc.data();
+            if (userData['Role'] === 'Student') {
+                if (userData['Student Info']['Locker']) {
+                    throw new Error("You have already applied for a locker");
+                }
+                else {
+                    const faculty = userData['Student Info']['Faculty'];
 
-            if (await lockerAppDoc.exists) {
-                throw new Error("You have already applied for locker");
-            } else {
-                const userRef = this.admin.firestore().collection("users").doc(uid);
-                const userDoc = await userRef.get();
-                const userData = userDoc.data();
-                const faculty = userData['Student Info']['Faculty'];
+                    const availableLockers = await this.admin.firestore().collection("lockers")
+                        .where("Faculty", "==", faculty)
+                        .where("Status", "==", "Available")
+                        .get().then((querySnapshot) => {
+                            const lockers = [];
+                            querySnapshot.forEach((doc) => {
+                                lockers.push({
+                                    id: doc.id,
+                                    ...doc.data(),
+                                })
+                            })
+                            return lockers
+                        })
 
-                const querySanpshot = await this.admin.firestore().collection("lockers")
-                    .where("Faculty", "==", faculty)
-                    .where("Status", "==", "Available")
-                    .get();
-                
-                return querySanpshot.docs.map(doc => doc.data());
+                    if (availableLockers.length === 0) {
+                        throw new Error("No lockers available for your faculty");
+                    } else {
+                        const firstLocker = availableLockers[0];
+                        await this.admin.firestore().collection("lockers").doc(firstLocker.id).update({
+                            'Status': 'Occupied',
+                            'Applied At': new Date(),
+                            'User': userData['Student Info']['Student ID'],
+                        })
+                        await userRef.update({
+                            'Student Info.Locker': firstLocker.id
+                        })
+                        await availableLockers.shift()
+                    }
+                }
             }
-
         } catch (error) {
             throw new Error(error.message);
         }

@@ -7,7 +7,7 @@ export class UserService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
-            const userRef = await this.admin.firestore().collection("users").doc(uid);
+            const userRef = this.admin.firestore().collection("users").doc(uid);
             const userDoc = await userRef.get()
             const userData = await userDoc.data()
             if (userData['Role'] === 'Student') {

@@ -24,7 +24,8 @@ export class ParkingService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
-            const parkAppDoc = this.admin.firestore().collection("parking").doc(uid).get();
+            const parkAppRef = this.admin.firestore().collection("parking");
+            const parkAppDoc = await parkAppRef.doc(uid).get();
 
             if (await parkAppDoc.exists) {
                 throw new Error("You have already applied for parking");

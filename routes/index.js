@@ -18,6 +18,7 @@ export function setupRoutes() {
     router.get("/user/faculty", (req, res) => controllers.userController.getUserFaculty(req, res));
     router.get("/user/parking/status", (req, res) => controllers.parkingController.getApplication(req, res));
     router.post("/user/parking/apply", (req, res) => controllers.parkingController.applyForParking(req, res));
+    router.post("/user/locker/apply", (req, res) => controllers.lockerController.applyForLocker(req, res));
     
     return router;
 }
