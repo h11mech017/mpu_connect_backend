@@ -46,7 +46,8 @@ export class AdminService {
         try {
             const applicationRef = this.admin.firestore().collection('parking').doc(applicationId);
             await applicationRef.update({
-                'Status': status
+                'Status': status,
+                'Updated At': new Date()
             });
             return true
         } catch (error) {

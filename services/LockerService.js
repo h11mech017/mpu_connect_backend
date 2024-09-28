@@ -18,7 +18,8 @@ export class LockerService {
                     const lockerData = lockerDoc.data();
                     return {
                         'Locker No.': lockerDoc.id,
-                        'Locker Location': lockerData['Location']
+                        'Locker Location': lockerData['Location'],
+                        'Applied At': lockerData['Applied At']
                     }
                 }
                 else {
