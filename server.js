@@ -22,6 +22,33 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// async function batchInsertDocuments() {
+//   const batch = db.batch();
+//   const startId = 1;
+//   const endId = 247;
+
+//   for (let i = startId; i <= endId; i++) {
+//     const docId = `N-${i.toString().padStart(4, '0')}`;
+//     const docRef = db.collection('lockers').doc(docId);
+    
+//     const data = {
+//       Faculty: 'FCSD',
+//       Location: 'Multisport Pavilion 1/F',
+//       Status: 'Available'
+//     };
+    
+//     batch.set(docRef, data);
+//   }
+
+//   try {
+//     await batch.commit();
+//     console.log(`Inserted ${endId - startId + 1} documents.`);
+//   } catch (error) {
+//     console.error('Error inserting documents:', error);
+//   }
+// }
+
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
