@@ -67,6 +67,7 @@ export class LockerService {
                         await this.admin.firestore().collection("lockers").doc(firstLocker.id).update({
                             'Status': 'Occupied',
                             'Applied At': new Date(),
+                            'Updated At': new Date(),
                             'User': userData['Student Info']['Student ID'],
                         })
                         await userRef.update({
