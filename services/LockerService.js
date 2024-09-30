@@ -61,7 +61,7 @@ export class LockerService {
                         })
 
                     if (availableLockers.length === 0) {
-                        throw new Error("No lockers available for your faculty");
+                        return false
                     } else {
                         const firstLocker = availableLockers[0];
                         await this.admin.firestore().collection("lockers").doc(firstLocker.id).update({
@@ -73,6 +73,7 @@ export class LockerService {
                         await userRef.update({
                             'Student Info.Locker': firstLocker.id
                         })
+                        return true
                     }
                 }
             }

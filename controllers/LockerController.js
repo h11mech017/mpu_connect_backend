@@ -27,8 +27,11 @@ export class LockerController {
         }
 
         try {
-            const lockerData = await this.lockerService.applyForLocker(token);
-            return res.status(200).send(lockerData);
+            const isApplied = await this.lockerService.applyForLocker(token);
+            if (!isApplied) {
+                return res.status(400).send("There is no available locker for your faculty");
+            }
+            return res.status(200).send(isApplied);
         } catch (error) {
             console.error("Error in applyForLocker:", error);
             return res.status(500).send("Internal Server Error");
