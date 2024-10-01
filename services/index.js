@@ -3,6 +3,7 @@ import { UserService } from "./UserService.js";
 import { ParkingService } from "./ParkingService.js";
 import { AdminService } from "./AdminService.js";
 import { LockerService } from "./LockerService.js";
+import { LostAndFoundService } from "./LostAndFoundService.js";
 
 export function createServices() {
     return {
@@ -10,6 +11,7 @@ export function createServices() {
       adminService: new AdminService(admin),
       parkingService: new ParkingService(admin),
       lockerService: new LockerService(admin),
+      lostAndFoundService: new LostAndFoundService(admin),
     };
   }
 

@@ -1,5 +1,6 @@
 import { AdminController } from "./AdminController.js";
 import { LockerController } from "./LockerController.js";
+import { LostAndFoundController } from "./LostAndFoundController.js";
 import { ParkingController } from "./ParkingController.js";
 import { UserController } from "./UserController.js";
 
@@ -9,5 +10,6 @@ export function createControllers(services) {
     adminController: new AdminController(services.adminService),
     parkingController: new ParkingController(services.parkingService),
     lockerController: new LockerController(services.lockerService),
+    lostAndFoundController: new LostAndFoundController(services.lostAndFoundService),
   };
 }

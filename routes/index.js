@@ -20,6 +20,7 @@ export function setupRoutes() {
     router.post("/user/parking/apply", (req, res) => controllers.parkingController.applyForParking(req, res));
     router.get("/user/locker/status", (req, res) => controllers.lockerController.getUserLocker(req, res));
     router.post("/user/locker/apply", (req, res) => controllers.lockerController.applyForLocker(req, res));
+    router.get("/lost/items", (req, res) => controllers.lostAndFoundController.getLostItems(req, res));
     
     return router;
 }
