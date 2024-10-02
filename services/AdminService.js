@@ -54,4 +54,34 @@ export class AdminService {
             return false
         }
     }
+
+    async addLostItem(token, form) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const adminRef = await this.admin.firestore().collection('users').doc(decodedToken.uid)
+            const adminDoc = await adminRef.get()
+            const adminId = adminDoc.data()['Admin ID']
+
+            await this.admin.firestore().collection('lost and found').add({
+                ...form,
+                'Updated By': adminId,
+            })
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
+    async claimLostItem(itemId, data) {
+        try {
+            const lostItemRef = this.admin.firestore().collection('lost and found').doc(itemId);
+            await lostItemRef.update({
+                ...data,
+                'Status': 'Claimed',
+                'Claim Date': new Date()
+            });
+            return true
+        } catch (error) {
+            return false
+        }
+    }
 }
