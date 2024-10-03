@@ -77,6 +77,7 @@ export class LockerService {
                     }
                 }
             }
+            return false
         } catch (error) {
             throw new Error(error.message);
         }
