@@ -16,8 +16,6 @@ export function setupRoutes() {
 
     //User routes
     router.get("/user/profile", (req, res) => controllers.userController.getUserProfile(req, res));
-    router.get("/user/qr-code", (req, res) => controllers.userController.getUserQrCode(req, res));
-    router.get("/user/faculty", (req, res) => controllers.userController.getUserFaculty(req, res));
 
     //Parking routes
     router.get("/user/parking/status", (req, res) => controllers.parkingController.getParkingApplication(req, res));

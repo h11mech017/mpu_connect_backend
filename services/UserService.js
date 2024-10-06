@@ -9,18 +9,18 @@ export class UserService {
             const uid = decodedToken.uid;
             const userRef = this.admin.firestore().collection("users").doc(uid);
             const userDoc = await userRef.get()
-            const userData = await userDoc.data()
+            const userData = userDoc.data()
             if (userData['Role'] === 'Student') {
                 const studentProgramCode = userData['Student Info']['Program Code'];
                 const programRef = await this.admin.firestore().collection("programs").doc(studentProgramCode);
                 const programDoc = await programRef.get();
                 const programData = programDoc.data();
+                const facultyName = (await userData['Student Info']['Faculty'].get()).data()['Faculty Name'];
+                userData['Student Info']['Faculty'] = facultyName;
+                userData['Student Info']['Program Name'] = programData['Program Name'];
+                userData['Student Info']['Language'] = programData['Language'];
 
-                return {
-                    ...userData,
-                    'Program Name': programData['Program Name'],
-                    'Language': programData['Language'],
-                }
+                return userData
             }
 
             return userData
@@ -29,34 +29,4 @@ export class UserService {
         }
     }
 
-    async getUserQrCode(token) {
-        try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const qrCodeRef = this.admin.storage().bucket().file(`users/${uid}/qr_code/${uid}_qr_code.png`);
-
-            const signedUrl = await qrCodeRef.getSignedUrl({
-                action: 'read',
-                expires: Date.now() + 15 * 60 * 1000
-            })
-            return signedUrl;
-        } catch (error) {
-            throw new Error(error.message);
-        }
-    }
-
-    async getUserFaculty(token) {
-        try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const userRef = await this.admin.firestore().collection("users").doc(uid);
-            const userDoc = await userRef.get()
-            const userData = await userDoc.data()
-            const userFaculty = userData['Faculty']
-            
-            return userFaculty
-        } catch (error) {
-            throw new Error(error.message);
-        }
-    }
 }
