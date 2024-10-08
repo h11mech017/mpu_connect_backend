@@ -1,8 +1,8 @@
-import dotenv from "dotenv";
-import admin from "firebase-admin";
-import { setupRoutes } from "./routes/index.js";
-import express from "express";
-import cors from "cors";
+import dotenv from "dotenv"
+import admin from "firebase-admin"
+import { setupRoutes } from "./routes/index.js"
+import express from "express"
+import cors from "cors"
 
 dotenv.config();
 
@@ -30,13 +30,13 @@ const db = admin.firestore();
 //   for (let i = startId; i <= endId; i++) {
 //     const docId = `N-${i.toString().padStart(4, '0')}`;
 //     const docRef = db.collection('lockers').doc(docId);
-    
+
 //     const data = {
 //       Faculty: 'FCSD',
 //       Location: 'Multisport Pavilion 1/F',
 //       Status: 'Available'
 //     };
-    
+
 //     batch.set(docRef, data);
 //   }
 
@@ -47,7 +47,6 @@ const db = admin.firestore();
 //     console.error('Error inserting documents:', error);
 //   }
 // }
-
 
 const PORT = process.env.PORT || 3000;
 

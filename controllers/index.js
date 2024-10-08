@@ -3,6 +3,7 @@ import { LockerController } from "./LockerController.js";
 import { LostAndFoundController } from "./LostAndFoundController.js";
 import { ParkingController } from "./ParkingController.js";
 import { UserController } from "./UserController.js";
+import { EmailController } from "./EmailController.js";
 
 export function createControllers(services) {
   return {
@@ -11,5 +12,6 @@ export function createControllers(services) {
     parkingController: new ParkingController(services.parkingService),
     lockerController: new LockerController(services.lockerService),
     lostAndFoundController: new LostAndFoundController(services.lostAndFoundService),
+    emailController: new EmailController(services.emailService),
   };
 }
