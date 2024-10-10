@@ -3,6 +3,7 @@ import admin from "firebase-admin"
 import { setupRoutes } from "./routes/index.js"
 import express from "express"
 import cors from "cors"
+import dns from "dns"
 
 dotenv.config();
 
@@ -10,6 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api", setupRoutes());
+
+dns.setServers(["8.8.8.8", "8.8.4.4"])
 
 admin.initializeApp({
   credential: admin.credential.cert({
