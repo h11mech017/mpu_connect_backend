@@ -6,8 +6,10 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export class EmailService {
-  constructor() {
+  constructor(sessionTimeout = 600000) {
     this.sessions = new Map()
+    this.sessionTimeout = sessionTimeout
+    this.sessionTimers = new Map()
   }
 
   async createSession(email, password) {
@@ -21,7 +23,16 @@ export class EmailService {
     const client = new ImapFlow(config)
     await client.connect()
     this.sessions.set(sessionId, { client, email })
+    this.resetSessionTimer(sessionId)
     return sessionId;
+  }
+
+  resetSessionTimer(sessionId) {
+    if (this.sessionTimers.has(sessionId)) {
+      clearTimeout(this.sessionTimers.get(sessionId))
+    }
+    const timer = setTimeout(() => this.closeSession(sessionId), this.sessionTimeout)
+    this.sessionTimers.set(sessionId, timer)
   }
 
   async getLatestEmail(sessionId) {
@@ -115,8 +126,18 @@ export class EmailService {
   async closeSession(sessionId) {
     const session = this.sessions.get(sessionId)
     if (!session) throw new Error('Invalid session')
+      try {
+        await session.client.logout()
+        console.log('Session closed:', sessionId)
+    } catch(error) {
+      console.error('Error in closeSession:', error)
+    } finally {
+      this.sessions.delete(sessionId)
+      if (this.sessionTimers.has(sessionId)) {
+        clearTimeout(this.sessionTimers.get(sessionId))
+        this.sessionTimers.delete(sessionId)
+      }
+    }
 
-    await session.client.logout()
-    this.sessions.delete(sessionId)
   }
 }
