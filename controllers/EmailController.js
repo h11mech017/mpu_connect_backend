@@ -28,9 +28,19 @@ export class EmailController {
     async getEmails(req, res) {
         try {
             const { sessionId } = req.params
-            const count = req.query
+            const count = req.query.count
             const emails = await this.emailService.getEmails(sessionId, count)
             res.status(200).send(emails)
+        } catch (error) {
+            res.status(500).send(error.message)
+        }
+    }
+
+    async getEmailDetail(req, res) {
+        try {
+            const { sessionId, seq } = req.params
+            const email = await this.emailService.getEmailDetail(sessionId, seq)
+            res.status(200).send(email)
         } catch (error) {
             res.status(500).send(error.message)
         }

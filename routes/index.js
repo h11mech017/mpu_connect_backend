@@ -34,6 +34,7 @@ export function setupRoutes() {
     router.post("/user/emails/login", (req, res) => controllers.emailController.login(req, res))
     router.get("/user/emails/:sessionId/latest", (req, res) => controllers.emailController.getLatestEmail(req, res))
     router.get("/user/emails/:sessionId", (req, res) => controllers.emailController.getEmails(req, res))
+    router.get("/user/emails/:sessionId/:seq", (req, res) => controllers.emailController.getEmailDetail(req, res))
     router.post('/user/emails/logout', (req, res) => controllers.emailController.logout(req, res))
 
 
