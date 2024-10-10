@@ -53,6 +53,14 @@ const db = admin.firestore();
 
 const PORT = process.env.PORT || 3000;
 
+app.get('/check-dns', (req, res) => {
+  const currentServers = dns.getServers();
+  res.json({
+    message: 'Current DNS servers',
+    servers: currentServers
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
