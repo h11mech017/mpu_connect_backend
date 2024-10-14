@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export class EmailService {
-  constructor(sessionTimeout = 600000) {
+  constructor(sessionTimeout = 6000000) {
     this.sessions = new Map()
     this.sessionTimeout = sessionTimeout
     this.sessionTimers = new Map()
@@ -24,7 +24,7 @@ export class EmailService {
     await client.connect()
     this.sessions.set(sessionId, { client, email })
     this.resetSessionTimer(sessionId)
-    return sessionId;
+    return { sessionId, email };
   }
 
   resetSessionTimer(sessionId) {
@@ -53,38 +53,46 @@ export class EmailService {
         html: parsed.html
       };
 
+    } catch (error) {
+      console.error('Error in getLatestEmail:', error)
+      throw error
     } finally {
       lock.release()
     }
   }
 
-  async getEmails(sessionId, count) {
+  async getEmails(sessionId, page = 1, pageSize = 10) {
     const session = this.sessions.get(sessionId)
     if (!session) throw new Error('Invalid session')
 
     let lock = await session.client.getMailboxLock('INBOX')
     try {
       let emails = []
-      if (!count) count = 10
       const fetchOptions = {
         envelope: true,
+        source: true,
         uid: true,
       };
 
       const mailboxStatus = await session.client.status('INBOX', { messages: true });
       const totalMessages = mailboxStatus.messages;
 
-      const endSequence = totalMessages;
-      const startSequence = Math.max(1, endSequence - count + 1);
+      const endSequence = totalMessages - (page - 1) * pageSize;
+      const startSequence = Math.max(1, endSequence - pageSize + 1);
       const fetchSet = `${startSequence}:${endSequence}`;
 
       const messages = session.client.fetch(fetchSet, fetchOptions);
 
       for await (let message of messages) {
-
+        const parsed = await simpleParser(message.source)
         emails.push({
           seq: message.seq,
+          from: message.envelope.from[0].name,
           subject: message.envelope.subject || '(No subject)',
+          header: parsed.text.replace(/\n/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 100) + '...'
         })
       }
 
@@ -126,10 +134,15 @@ export class EmailService {
   async closeSession(sessionId) {
     const session = this.sessions.get(sessionId)
     if (!session) throw new Error('Invalid session')
-      try {
+    try {
+      if (session.client && session.client.usable) {
         await session.client.logout()
         console.log('Session closed:', sessionId)
-    } catch(error) {
+      }
+      else {
+        console.log('Session already closed:', sessionId)
+      }
+    } catch (error) {
       console.error('Error in closeSession:', error)
     } finally {
       this.sessions.delete(sessionId)

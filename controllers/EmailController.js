@@ -7,8 +7,8 @@ export class EmailController {
         const { email, password } = req.body
 
         try {
-            const sessionId = await this.emailService.createSession(email, password)
-            res.status(200).send({ sessionId })
+            const response = await this.emailService.createSession(email, password)
+            res.status(200).send(response)
         } catch (error) {
             res.status(500).send(error.message)
         }
@@ -28,8 +28,9 @@ export class EmailController {
     async getEmails(req, res) {
         try {
             const { sessionId } = req.params
-            const count = req.query.count
-            const emails = await this.emailService.getEmails(sessionId, count)
+            const page = req.query.page
+            const pageSize = req.query.pageSize
+            const emails = await this.emailService.getEmails(sessionId, page, pageSize)
             res.status(200).send(emails)
         } catch (error) {
             res.status(500).send(error.message)
