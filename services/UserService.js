@@ -11,14 +11,15 @@ export class UserService {
             const userDoc = await userRef.get()
             const userData = userDoc.data()
             if (userData['Role'] === 'Student') {
-                const studentProgramCode = userData['Student Info']['Program Code'];
-                const programRef = await this.admin.firestore().collection("programs").doc(studentProgramCode);
-                const programDoc = await programRef.get();
-                const programData = programDoc.data();
-                const facultyName = (await userData['Student Info']['Faculty'].get()).data()['Faculty Name'];
-                userData['Student Info']['Faculty'] = facultyName;
-                userData['Student Info']['Program Name'] = programData['Program Name'];
-                userData['Student Info']['Language'] = programData['Language'];
+                const programDoc = await userData['Student Info']['Program'].get()
+                const programData = programDoc.data()
+                const facultyName = (await userData['Student Info']['Faculty'].get()).data()['Faculty Name']
+                userData['Student Info']['Faculty'] = facultyName
+                userData['Student Info']['Program Code'] = programData['Program Code']
+                userData['Student Info']['Program Name'] = programData['Program Name']
+                userData['Student Info']['Language'] = programData['Language']
+
+                await userData.delete
 
                 return userData
             }
