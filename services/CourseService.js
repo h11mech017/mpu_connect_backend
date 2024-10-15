@@ -16,6 +16,11 @@ export class CourseService {
                 const courseDocs = await userData['Student Info']['Courses']
                 for (let i = 0; i < courseDocs.length; i++) {
                     courseDocs[i]['Course'] = (await courseDocs[i]['Course'].get()).data()
+                    courseDocs[i]['Lecturer'] = courseDocs[i]['Course']['Classes'].find(
+                        classInfo => classInfo['Section'] === courseDocs[i]['Section']
+                    )['Lecturer'];
+
+                    delete courseDocs[i]['Course']['Classes']
                 }
                 return courseDocs
             } else {
