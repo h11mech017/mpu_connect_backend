@@ -5,6 +5,7 @@ import { AdminService } from "./AdminService.js";
 import { LockerService } from "./LockerService.js";
 import { LostAndFoundService } from "./LostAndFoundService.js";
 import { EmailService } from "./EmailService.js";
+import { CourseService } from "./CourseService.js";
 
 export function createServices() {
     return {
@@ -14,6 +15,7 @@ export function createServices() {
       lockerService: new LockerService(admin),
       lostAndFoundService: new LostAndFoundService(admin),
       emailService: new EmailService(),
+      courseService: new CourseService(admin),
     };
   }
 

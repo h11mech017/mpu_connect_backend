@@ -37,6 +37,9 @@ export function setupRoutes() {
     router.get("/user/emails/:sessionId/:seq", (req, res) => controllers.emailController.getEmailDetail(req, res))
     router.post('/user/emails/:sessionId/logout', (req, res) => controllers.emailController.logout(req, res))
 
+    //Course routes
+    router.get("/user/courses", (req, res) => controllers.courseController.getUserCourses(req, res))
+
 
     return router;
 }
