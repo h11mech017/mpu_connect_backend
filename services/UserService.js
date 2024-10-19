@@ -13,7 +13,7 @@ export class UserService {
             if (userData['Role'] === 'Student') {
                 const programDoc = await userData['Student Info']['Program'].get()
                 const programData = programDoc.data()
-                const facultyName = (await userData['Student Info']['Faculty'].get()).data()['Faculty Name']
+                const facultyName = (await userData['Student Info']['Faculty'].get()).data()['EName']
                 userData['Student Info']['Faculty'] = facultyName
                 userData['Student Info']['Program Code'] = programData['Program Code']
                 userData['Student Info']['Program Name'] = programData['Program Name']

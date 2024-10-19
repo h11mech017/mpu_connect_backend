@@ -50,7 +50,8 @@ export class EmailService {
         to: parsed.to.text,
         date: parsed.date,
         text: parsed.text,
-        html: parsed.html
+        html: parsed.html,
+        attachment: parsed ? parsed.attachments : null
       };
 
     } catch (error) {
