@@ -47,7 +47,7 @@ export class LostAndFoundService {
         try {
             const lostItemsRef = await this.admin.firestore().collection('lost and found')
             const lostItemsData = await lostItemsRef.get().then((querySnapshot) => {
-                const lostItems = [];
+                const lostItems = []
                 querySnapshot.forEach((doc) => {
                     lostItems.push({
                         id: doc.id,
@@ -58,7 +58,7 @@ export class LostAndFoundService {
             })
             return lostItemsData
         } catch (error) {
-            throw new Error(error.message);
+            throw new Error(error.message)
         }
     }
 }

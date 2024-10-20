@@ -33,24 +33,24 @@ export class LockerService {
 
     async applyForLocker(token) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
 
-            const userRef = this.admin.firestore().collection("users").doc(uid);
-            const userDoc = await userRef.get();
-            const userData = userDoc.data();
+            const userRef = this.admin.firestore().collection("users").doc(uid)
+            const userDoc = await userRef.get()
+            const userData = userDoc.data()
             if (userData['Role'] === 'Student') {
                 if (userData['Student Info']['Locker']) {
-                    throw new Error("You have already applied for a locker");
+                    throw new Error("You have already applied for a locker")
                 }
                 else {
-                    const faculty = userData['Student Info']['Faculty'];
+                    const faculty = userData['Student Info']['Faculty']
 
                     const availableLockers = await this.admin.firestore().collection("lockers")
                         .where("Faculty", "==", faculty)
                         .where("Status", "==", "Available")
                         .get().then((querySnapshot) => {
-                            const lockers = [];
+                            const lockers = []
                             querySnapshot.forEach((doc) => {
                                 lockers.push({
                                     id: doc.id,

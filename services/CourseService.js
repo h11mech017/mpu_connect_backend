@@ -13,18 +13,31 @@ export class CourseService {
             const userData = userDoc.data()
 
             if (userData['Role'] === 'Student') {
-                const courseDocs = await userData['Student Info']['Courses']
-                for (let i = 0; i < courseDocs.length; i++) {
-                    const courseDoc = await courseDocs[i]['Course'].get()
-                    courseDocs[i]['Course'] = courseDoc.data()
-                    courseDocs[i]['ID'] = courseDoc.id
-                    courseDocs[i]['Lecturer'] = courseDocs[i]['Course']['Classes'].find(
-                        classInfo => classInfo['Section'] === courseDocs[i]['Section']
-                    )['Lecturer'];
-
-                    delete courseDocs[i]['Course']['Classes']
-                }
-                return courseDocs
+                const courseRefs = await this.admin.firestore().collection("student and course").where('Student', '==', uid)
+                const coursesData = await courseRefs.get().then(async (querySnapshot) => {
+                    const courses = []
+                    const coursePromises = []
+            
+                    querySnapshot.forEach((doc) => {
+                        const courseData = doc.data();
+                        const coursePromise = courseData.Course.get().then(courseDoc => {
+                            const { Student, ...restCourseData } = courseData
+                            return {
+                                id: doc.id,
+                                ...restCourseData,
+                                Course: courseDoc.data()
+                            };
+                        })
+                        coursePromises.push(coursePromise)
+                    })
+            
+                    const resolvedCourses = await Promise.all(coursePromises)
+                    courses.push(...resolvedCourses)
+            
+                    return courses
+                })
+            
+                return coursesData
             } else {
                 return null
             }
