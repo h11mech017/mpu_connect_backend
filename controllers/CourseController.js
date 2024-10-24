@@ -27,5 +27,21 @@ export class CourseController {
         }
     }
 
+    async getCourseFiles(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1];
+        const courseId = req.params.id;
+
+        if (!token) {
+            res.status(401).send("Unauthorized");
+        }
+
+        try {
+            const files = await this.courseService.getCourseFiles(token, courseId);
+            res.status(200).json(files);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
 
 }

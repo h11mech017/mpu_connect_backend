@@ -39,6 +39,7 @@ export function setupRoutes() {
 
     //Course routes
     router.get("/user/courses", (req, res) => controllers.courseController.getUserCourses(req, res))
+    router.get("/user/courses/:id/files", (req, res) => controllers.courseController.getCourseFiles(req, res))
 
 
     return router;

@@ -11,7 +11,7 @@ export class UserController {
     }
     try {
       const userProfile = await this.userService.getUserProfile(token)
-      return res.status(200).send(userProfile)
+      return res.status(200).json(userProfile)
     } catch (error) {
       console.error("Error in getUserProfile:", error)
       return res.status(500).send("Internal Server Error")

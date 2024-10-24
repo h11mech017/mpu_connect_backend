@@ -17,7 +17,7 @@ export class CourseService {
                 const coursesData = await courseRefs.get().then(async (querySnapshot) => {
                     const courses = []
                     const coursePromises = []
-            
+
                     querySnapshot.forEach((doc) => {
                         const courseData = doc.data();
                         const coursePromise = courseData.Course.get().then(courseDoc => {
@@ -30,13 +30,13 @@ export class CourseService {
                         })
                         coursePromises.push(coursePromise)
                     })
-            
+
                     const resolvedCourses = await Promise.all(coursePromises)
                     courses.push(...resolvedCourses)
-            
+
                     return courses
                 })
-            
+
                 return coursesData
             } else {
                 return null
@@ -46,31 +46,33 @@ export class CourseService {
         }
     }
 
-    async applyForParking(token, form) {
+    async getCourseDetail(token, courseId) {
+    }
+
+    async getCourseFiles(token, courseId) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
-            const parkAppRef = this.admin.firestore().collection("parking");
-            const parkAppDoc = await parkAppRef.doc(uid).get();
+            const bucket = this.admin.storage().bucket();
+            const rootPrefix = `courses/${courseId}/`;
 
-            if (await parkAppDoc.exists) {
-                throw new Error("You have already applied for parking");
-            } else {
-                const userRef = this.admin.firestore().collection("users").doc(uid);
-                const userDoc = await userRef.get();
-                const userData = await userDoc.data();
+            const [files] = await bucket.getFiles({ prefix: rootPrefix })
 
-                await this.admin.firestore().collection("parking").doc(uid).set({
-                    ...form,
-                    'Name': userData['Student Info']['Name'],
-                    'Student ID': userData['Student Info']['Student ID'],
-                    'Applied At': new Date(),
-                    'Status': 'Pending',
-                    'Card valid till': userData['Card valid till']
-                });
+            if (!Array.isArray(files)) {
+                console.error('Unexpected response from getFiles:', files);
+                throw new Error('Unexpected response from storage');
             }
+
+            const allFiles = files.map(file => ({
+                name: file.name,
+                type: file.name.endsWith('/') ? 'directory' : 'file'
+            }))
+
+            return allFiles
         } catch (error) {
-            throw new Error(error.message);
+            console.error('Error listing contents:', error);
+            throw error;
         }
     }
+
 }

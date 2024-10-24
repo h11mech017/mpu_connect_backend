@@ -41,7 +41,7 @@ export class EmailController {
         try {
             const { sessionId, seq } = req.params
             const email = await this.emailService.getEmailDetail(sessionId, seq)
-            res.status(200).send(email)
+            res.status(200).json(email)
         } catch (error) {
             res.status(500).send(error.message)
         }
