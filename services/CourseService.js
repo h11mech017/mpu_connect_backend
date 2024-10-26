@@ -63,10 +63,17 @@ export class CourseService {
                 throw new Error('Unexpected response from storage');
             }
 
-            const allFiles = files.map(file => ({
-                name: file.name,
-                type: file.name.endsWith('/') ? 'directory' : 'file'
-            }))
+            let allFiles = files.map(file => {
+                file.name = file.name.replace(rootPrefix, '')
+                if (file.name === 'assignment_submissions/') return null
+                else {
+                return {
+                    name: file.name,
+                    type: file.name.endsWith('/') ? 'directory' : 'file'
+                }
+            }
+            })
+            allFiles = allFiles.filter(file => file !== null && file.name !== '')
 
             return allFiles
         } catch (error) {
