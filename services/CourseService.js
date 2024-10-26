@@ -63,16 +63,29 @@ export class CourseService {
                 throw new Error('Unexpected response from storage');
             }
 
-            let allFiles = files.map(file => {
+            let allFiles = await Promise.all(files.map(async (file) => {
                 file.name = file.name.replace(rootPrefix, '')
                 if (file.name.includes('assignment') || file.name.includes('Assignment')) return null
-                else {
+
+                let downloadUrl = null
+                let metadata = null
+                if (!file.name.endsWith('/')) {
+                    [downloadUrl] = await file.getSignedUrl({
+                        action: 'read',
+                        expires: Date.now() + 3600000 // 1 hour from now
+                    });
+
+                    [metadata] = await file.getMetadata();
+                }
                 return {
                     name: file.name,
-                    type: file.name.endsWith('/') ? 'directory' : 'file'
+                    downloadUrl: downloadUrl,
+                    contentType: metadata?.contentType,
+                    type: file.name.endsWith('/') ? 'directory' : 'file',
+                    size: metadata?.size,
                 }
             }
-            })
+            ))
             allFiles = allFiles.filter(file => file !== null && file.name !== '')
 
             return allFiles
