@@ -23,7 +23,7 @@ export class CourseService {
                         const coursePromise = courseData.Course.get().then(courseDoc => {
                             const { Student, ...restCourseData } = courseData
                             return {
-                                id: doc.id,
+                                id: courseDoc.id,
                                 ...restCourseData,
                                 Course: courseDoc.data()
                             };
