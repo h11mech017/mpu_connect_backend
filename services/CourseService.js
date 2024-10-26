@@ -65,7 +65,7 @@ export class CourseService {
 
             let allFiles = files.map(file => {
                 file.name = file.name.replace(rootPrefix, '')
-                if (file.name === 'assignment_submissions/') return null
+                if (file.name.includes('assignment') || file.name.includes('Assignment')) return null
                 else {
                 return {
                     name: file.name,
