@@ -64,6 +64,7 @@ export class CourseService {
             }
 
             let allFiles = await Promise.all(files.map(async (file) => {
+                file.path = file.name
                 file.name = file.name.replace(rootPrefix, '')
                 if (file.name.includes('assignment') || file.name.includes('Assignment')) return null
 
@@ -79,6 +80,7 @@ export class CourseService {
                 }
                 return {
                     name: file.name,
+                    path: file.path,
                     downloadUrl: downloadUrl,
                     contentType: metadata?.contentType,
                     type: file.name.endsWith('/') ? 'directory' : 'file',
