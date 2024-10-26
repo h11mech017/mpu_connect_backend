@@ -82,7 +82,7 @@ export class CourseService {
                     downloadUrl: downloadUrl,
                     contentType: metadata?.contentType,
                     type: file.name.endsWith('/') ? 'directory' : 'file',
-                    size: metadata?.size,
+                    size: metadata?.size? parseInt(metadata.size, 10) : null,
                 }
             }
             ))
