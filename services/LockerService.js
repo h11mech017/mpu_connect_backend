@@ -68,7 +68,7 @@ export class LockerService {
                             'Status': 'Occupied',
                             'Applied At': new Date(),
                             'Updated At': new Date(),
-                            'User': userData['Student Info']['Student ID'],
+                            'Student': userData['Student Info']['Student ID'],
                         })
                         await userRef.update({
                             'Student Info.Locker': firstLocker.id
