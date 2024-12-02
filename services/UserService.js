@@ -22,9 +22,14 @@ export class UserService {
                 await userData.delete
 
                 return userData
-            }
+            } else if (userData['Role'] === 'Teacher') {
+                const facultyName = (await userData['Teacher Info']['Faculty'].get()).data()['EName']
+                userData['Teacher Info']['Faculty'] = facultyName
 
-            return userData
+                await userData.delete
+
+                return userData
+            }
         } catch (error) {
             throw new Error(error.message);
         }
