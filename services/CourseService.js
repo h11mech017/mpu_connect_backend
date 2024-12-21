@@ -83,7 +83,7 @@ export class CourseService {
                     downloadUrl: downloadUrl,
                     contentType: metadata?.contentType,
                     type: file.name.endsWith('/') ? 'directory' : 'file',
-                    size: metadata?.size? parseInt(metadata.size, 10) : null,
+                    size: metadata?.size ? parseInt(metadata.size, 10) : null,
                 }
             }
             ))
@@ -96,4 +96,47 @@ export class CourseService {
         }
     }
 
+    async getCourseAssignments(token, courseId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+            
+            const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
+            const assignments = await assignmentRef.get().then((querySnapshot) => {
+                const assignments = []
+                querySnapshot.forEach((doc) => {
+                    assignments.push({
+                        id: doc.id,
+                        ...doc.data(),
+                    })
+                })
+                return assignments
+            })
+
+            return assignments
+        } catch (error) {
+            console.error('Error listing contents:', error);
+            throw error;
+        }
+    }
+
+    async getCourseAssignmentFiles(token, courseId, assignmentId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+            const bucket = this.admin.storage().bucket();
+            const rootPrefix = `courses/${courseId}/${assignmentId}/assignment_files/`;
+
+            const [assignments] = await bucket.getFiles({ prefix: rootPrefix })
+
+            if (!Array.isArray(assignments)) {
+                console.error('Unexpected response from getFiles:', assignments);
+                throw new Error('Unexpected response from storage');
+            }
+
+        } catch (error) {
+            console.error('Error listing contents:', error);
+            throw error;
+        }
+    }
 }

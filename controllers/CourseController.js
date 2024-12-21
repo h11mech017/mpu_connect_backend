@@ -13,33 +13,66 @@ export class CourseController {
     // }
 
     async getUserCourses(req, res) {
-        const token = req.headers.authorization?.split("Bearer ")[1];
+        const token = req.headers.authorization?.split("Bearer ")[1]
 
         if (!token) {
-            res.status(401).send("Unauthorized");
+            res.status(401).send("Unauthorized")
         }
 
         try {
-            const courses = await this.courseService.getUserCourses(token);
-            res.status(200).json(courses);
+            const courses = await this.courseService.getUserCourses(token)
+            res.status(200).json(courses)
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error.message })
         }
     }
 
     async getCourseFiles(req, res) {
-        const token = req.headers.authorization?.split("Bearer ")[1];
-        const courseId = req.params.id;
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
 
         if (!token) {
-            res.status(401).send("Unauthorized");
+            res.status(401).send("Unauthorized")
         }
 
         try {
-            const files = await this.courseService.getCourseFiles(token, courseId);
-            res.status(200).json(files);
+            const files = await this.courseService.getCourseFiles(token, courseId)
+            res.status(200).json(files)
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    async getCourseAssignments(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const assignments = await this.courseService.getCourseAssignments(token, courseId);
+            res.status(200).json(assignments)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    async getCourseAssignmentFiles(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const assignmentId = req.params.assignmentId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const files = await this.courseService.getCourseAssignmentFiles(token, courseId, assignmentId)
+            res.status(200).json(files)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
         }
     }
 
