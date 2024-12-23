@@ -63,7 +63,7 @@ export class CourseService {
                 throw new Error('Unexpected response from storage');
             }
 
-            let allFiles = await Promise.all(assignments.map(async (file) => {
+            let allFiles = await Promise.all(files.map(async (file) => {
                 file.fileName = file.name.replace(rootPrefix, '')
                 if (file.name.includes('assignment') || file.name.includes('Assignment')) return null
 
