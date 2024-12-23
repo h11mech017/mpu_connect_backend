@@ -41,7 +41,7 @@ export function setupRoutes() {
     router.get("/user/courses", (req, res) => controllers.courseController.getUserCourses(req, res))
     router.get("/user/courses/:courseId/files", (req, res) => controllers.courseController.getCourseFiles(req, res))
     router.get("/user/courses/:courseId/assignments", (req, res) => controllers.courseController.getCourseAssignments(req, res))
-    router.get("/user/courses/:courseId/assignments/:assignmentId/files", (req, res) => controllers.courseController.getAssignmentDetail(req, res))
+    router.get("/user/courses/:courseId/assignments/:assignmentId/files", (req, res) => controllers.courseController.getCourseAssignmentFiles(req, res))
 
 
     return router

@@ -63,7 +63,7 @@ export class CourseService {
                 throw new Error('Unexpected response from storage');
             }
 
-            let allFiles = await Promise.all(files.map(async (file) => {
+            let allFiles = await Promise.all(assignments.map(async (file) => {
                 file.fileName = file.name.replace(rootPrefix, '')
                 if (file.name.includes('assignment') || file.name.includes('Assignment')) return null
 
@@ -100,7 +100,7 @@ export class CourseService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
-            
+
             const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
             const assignments = await assignmentRef.get().then((querySnapshot) => {
                 const assignments = []
@@ -125,7 +125,7 @@ export class CourseService {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
             const bucket = this.admin.storage().bucket();
-            const rootPrefix = `courses/${courseId}/${assignmentId}/assignment_files/`;
+            const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`;
 
             const [assignments] = await bucket.getFiles({ prefix: rootPrefix })
 
@@ -133,6 +133,32 @@ export class CourseService {
                 console.error('Unexpected response from getFiles:', assignments);
                 throw new Error('Unexpected response from storage');
             }
+
+
+            let allFiles = await Promise.all(assignments.map(async (file) => {
+                file.fileName = file.name.replace(rootPrefix, '')
+
+                let downloadUrl = null
+                let metadata = null
+                if (!file.name.endsWith('/')) {
+                    [downloadUrl] = await file.getSignedUrl({
+                        action: 'read',
+                        expires: Date.now() + 3600000 // 1 hour from now
+                    });
+
+                    [metadata] = await file.getMetadata();
+                }
+                return {
+                    name: file.fileName,
+                    path: file.name,
+                    downloadUrl: downloadUrl,
+                    contentType: metadata?.contentType,
+                    size: metadata?.size ? parseInt(metadata.size, 10) : null,
+                }
+            }))
+            allFiles = allFiles.filter(file => file !== null && file.name !== '')
+
+            return allFiles;
 
         } catch (error) {
             console.error('Error listing contents:', error);
