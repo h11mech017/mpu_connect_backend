@@ -13,7 +13,9 @@ export class CourseService {
             const userData = userDoc.data()
 
             if (userData['Role'] === 'Student') {
-                const courseRefs = await this.admin.firestore().collection("student and course").where('Student', '==', uid)
+                const courseRefs = await this.admin.firestore().collection("student and course")
+                    .where('Student', '==', uid)
+                    .where('Enrolled', '==', true)
                 const coursesData = await courseRefs.get().then(async (querySnapshot) => {
                     const courses = []
                     const coursePromises = []
