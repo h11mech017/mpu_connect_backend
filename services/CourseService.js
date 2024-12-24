@@ -1,3 +1,7 @@
+import multer from 'multer'
+
+const upload = multer({ storage: multer.memoryStorage() })
+
 export class CourseService {
     constructor(firebaseAdmin) {
         this.admin = firebaseAdmin
@@ -164,6 +168,40 @@ export class CourseService {
 
         } catch (error) {
             console.error('Error listing contents:', error);
+            throw error;
+        }
+    }
+
+    async submitAssignment(token, courseId, assignmentId, file) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+            const bucket = this.admin.storage().bucket();
+            const rootPrefix = `courses/${courseId}/assignment_submissions/${assignmentId}/`;
+
+            const fileName = `${rootPrefix}${file.originalname}`;
+            const fileUpload = bucket.file(fileName);
+
+            const stream = fileUpload.createWriteStream({
+                metadata: {
+                    contentType: file.mimetype,
+                },
+            });
+
+            stream.on('error', (error) => {
+                console.error('Error uploading file:', error);
+                throw error;
+            });
+
+            stream.on('finish', () => {
+                console.log('File uploaded successfully');
+            });
+
+            stream.end(file.buffer);
+
+            return true;
+        } catch (error) {
+            console.error('Error submitting assignment:', error);
             throw error;
         }
     }

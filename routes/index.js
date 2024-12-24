@@ -1,4 +1,5 @@
 import express from "express"
+import multer from "multer"
 import { createServices } from "../services/index.js"
 import { createControllers } from "../controllers/index.js"
 
@@ -6,42 +7,44 @@ export function setupRoutes() {
     const router = express.Router()
     const services = createServices()
     const controllers = createControllers(services)
+    const upload = multer({ storage: multer.memoryStorage() })
 
     //Admin routes
-    router.get("/admin/check", (req, res) => controllers.adminController.checkAdmin(req, res))
-    router.get("/admin/parking/applications", (req, res) => controllers.adminController.getParkingApplications(req, res))
-    router.put("/admin/parking/application/update", (req, res) => controllers.adminController.updateParkingApplicationStatus(req, res))
-    router.post("/admin/lost/item/add", (req, res) => controllers.adminController.addLostItem(req, res))
-    router.put("/admin/lost/item/claim", (req, res) => controllers.adminController.claimLostItem(req, res))
+    router.get("/admin/check", async (req, res) => controllers.adminController.checkAdmin(req, res))
+    router.get("/admin/parking/applications", async (req, res) => controllers.adminController.getParkingApplications(req, res))
+    router.put("/admin/parking/application/update", async (req, res) => controllers.adminController.updateParkingApplicationStatus(req, res))
+    router.post("/admin/lost/item/add", async (req, res) => controllers.adminController.addLostItem(req, res))
+    router.put("/admin/lost/item/claim", async (req, res) => controllers.adminController.claimLostItem(req, res))
 
     //User routes
-    router.get("/user/profile", (req, res) => controllers.userController.getUserProfile(req, res))
+    router.get("/user/profile", async (req, res) => controllers.userController.getUserProfile(req, res))
 
     //Parking routes
-    router.get("/user/parking/status", (req, res) => controllers.parkingController.getParkingApplication(req, res))
-    router.post("/user/parking/apply", (req, res) => controllers.parkingController.applyForParking(req, res))
+    router.get("/user/parking/status", async (req, res) => controllers.parkingController.getParkingApplication(req, res))
+    router.post("/user/parking/apply", async (req, res) => controllers.parkingController.applyForParking(req, res))
 
     //Locker routes
-    router.get("/user/locker/status", (req, res) => controllers.lockerController.getUserLocker(req, res))
-    router.post("/user/locker/apply", (req, res) => controllers.lockerController.applyForLocker(req, res))
+    router.get("/user/locker/status", async (req, res) => controllers.lockerController.getUserLocker(req, res))
+    router.post("/user/locker/apply", async (req, res) => controllers.lockerController.applyForLocker(req, res))
 
     //Lost and Found routes
-    router.get("/lost/items", (req, res) => controllers.lostAndFoundController.getLostItems(req, res))
-    router.get("/lost/categories", (req, res) => controllers.lostAndFoundController.getCategories(req, res))
-    router.get("/lost/locations", (req, res) => controllers.lostAndFoundController.getLocations(req, res))
+    router.get("/lost/items", async (req, res) => controllers.lostAndFoundController.getLostItems(req, res))
+    router.get("/lost/categories", async (req, res) => controllers.lostAndFoundController.getCategories(req, res))
+    router.get("/lost/locations", async (req, res) => controllers.lostAndFoundController.getLocations(req, res))
 
     //Email routes
-    router.post("/user/emails/login", (req, res) => controllers.emailController.login(req, res))
-    router.get("/user/emails/:sessionId/latest", (req, res) => controllers.emailController.getLatestEmail(req, res))
-    router.get("/user/emails/:sessionId", (req, res) => controllers.emailController.getEmails(req, res))
-    router.get("/user/emails/:sessionId/:seq", (req, res) => controllers.emailController.getEmailDetail(req, res))
-    router.post('/user/emails/:sessionId/logout', (req, res) => controllers.emailController.logout(req, res))
+    router.post("/user/emails/login", async (req, res) => controllers.emailController.login(req, res))
+    router.get("/user/emails/:sessionId/latest", async (req, res) => controllers.emailController.getLatestEmail(req, res))
+    router.get("/user/emails/:sessionId", async (req, res) => controllers.emailController.getEmails(req, res))
+    router.get("/user/emails/:sessionId/:seq", async (req, res) => controllers.emailController.getEmailDetail(req, res))
+    router.post('/user/emails/:sessionId/logout', async (req, res) => controllers.emailController.logout(req, res))
 
     //Course routes
-    router.get("/user/courses", (req, res) => controllers.courseController.getUserCourses(req, res))
-    router.get("/user/courses/:courseId/files", (req, res) => controllers.courseController.getCourseFiles(req, res))
-    router.get("/user/courses/:courseId/assignments", (req, res) => controllers.courseController.getCourseAssignments(req, res))
-    router.get("/user/courses/:courseId/assignments/:assignmentId/files", (req, res) => controllers.courseController.getCourseAssignmentFiles(req, res))
+    router.get("/user/courses", async (req, res) => controllers.courseController.getUserCourses(req, res))
+    router.get("/user/courses/:courseId/files", async (req, res) => controllers.courseController.getCourseFiles(req, res))
+    router.get("/user/courses/:courseId/assignments", async (req, res) => controllers.courseController.getCourseAssignments(req, res))
+    router.get("/user/courses/:courseId/assignments/:assignmentId/files", async (req, res) => controllers.courseController.getCourseAssignmentFiles(req, res))
+    router.post("/user/courses/:courseId/assignments/:assignmentId/submit", upload.single('file'), async (req, res) => controllers.courseController.submitAssignment(req, res))
 
 
     return router
