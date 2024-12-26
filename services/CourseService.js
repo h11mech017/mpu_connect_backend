@@ -1,10 +1,13 @@
-import multer from 'multer'
+import multer from "multer"
+import { UserService } from "./UserService.js"
+
 
 const upload = multer({ storage: multer.memoryStorage() })
 
 export class CourseService {
     constructor(firebaseAdmin) {
         this.admin = firebaseAdmin
+        this.userService = new UserService(firebaseAdmin)
     }
 
     async getUserCourses(token) {
@@ -12,11 +15,9 @@ export class CourseService {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
 
-            const userRef = this.admin.firestore().collection("users").doc(uid)
-            const userDoc = await userRef.get()
-            const userData = userDoc.data()
+            const userRole = await this.userService.getUserRole(token)
 
-            if (userData['Role'] === 'Student') {
+            if (userRole === 'Student') {
                 const courseRefs = await this.admin.firestore().collection("student and course")
                     .where('Student', '==', uid)
                     .where('Enrolled', '==', true)
@@ -44,8 +45,34 @@ export class CourseService {
                 })
 
                 return coursesData
-            } else {
-                return null
+            } else if (userRole === 'Teacher') {
+                const courseRefs = await this.admin.firestore().collection("teacher and course")
+                .where('Teacher', '==', uid)
+                .where('Teaching', '==', true)
+            const coursesData = await courseRefs.get().then(async (querySnapshot) => {
+                const courses = []
+                const coursePromises = []
+
+                querySnapshot.forEach((doc) => {
+                    const courseData = doc.data();
+                    const coursePromise = courseData.Course.get().then(courseDoc => {
+                        const { Student, ...restCourseData } = courseData
+                        return {
+                            id: courseDoc.id,
+                            ...restCourseData,
+                            Course: courseDoc.data()
+                        };
+                    })
+                    coursePromises.push(coursePromise)
+                })
+
+                const resolvedCourses = await Promise.all(coursePromises)
+                courses.push(...resolvedCourses)
+
+                return courses
+            })
+
+            return coursesData 
             }
         } catch (error) {
             throw new Error(error.message)
