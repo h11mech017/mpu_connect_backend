@@ -76,6 +76,23 @@ export class CourseController {
         }
     }
 
+    async getAssignmentSubmissions(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const assignmentId = req.params.assignmentId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const submissions = await this.courseService.getAssignmentSubmissions(token, courseId, assignmentId)
+            res.status(200).json(submissions)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async submitAssignment(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId

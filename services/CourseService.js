@@ -199,6 +199,55 @@ export class CourseService {
         }
     }
 
+    async getAssignmentSubmissions(token, courseId, assignmentId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+
+            const role = await this.userService.getUserRole(token)
+            
+            if (role === 'Teacher') {
+            const submissionRef = this.admin.firestore().collection("student and assignment")
+                .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
+                    .collection('assignments').doc(assignmentId))
+            const submissions = await submissionRef.get().then((querySnapshot) => {
+                const submissions = []
+                querySnapshot.forEach((doc) => {
+                    submissions.push({
+                        id: doc.id,
+                        ...doc.data(),
+                    })
+                })
+                return submissions
+            })
+
+            return submissions
+        } else {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+
+            const submissionRef = this.admin.firestore().collection("student and assignment")
+                .where('Student', '==', uid)
+                .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
+                    .collection('assignments').doc(assignmentId))
+            const submissions = await submissionRef.get().then((querySnapshot) => {
+                const submissions = []
+                querySnapshot.forEach((doc) => {
+                    submissions.push({
+                        id: doc.id,
+                        ...doc.data(),
+                    })
+                })
+                return submissions
+            })
+
+            return submissions
+        }
+        } catch (error) {
+            console.error('Error listing contents:', error);
+            throw error;
+        }
+    }
+
     async submitAssignment(token, courseId, assignmentId, file) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
@@ -225,9 +274,10 @@ export class CourseService {
             });
 
             // create a new submission record in the database
-            const submissionRef = this.admin.firestore().collection("student and assignment").doc().set({
+            await this.admin.firestore().collection("student and assignment").doc().set({
                 'Student': uid,
-                'Assignment': this.admin.firestore().collection('assignment').doc(assignmentId),
+                'Assignment': this.admin.firestore().collection('courses').doc(courseId)
+                    .collection('assignments').doc(assignmentId),
                 'Submission Date': new Date(),
                 'Submitted File': fileName,
                 'Point': 0,
