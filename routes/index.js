@@ -11,6 +11,7 @@ export function setupRoutes() {
 
     //Admin routes
     router.get("/admin/check", async (req, res) => controllers.adminController.checkAdmin(req, res))
+    router.get("/admin/role/check", async (req, res) => controllers.adminController.checkRole(req, res))
     router.get("/admin/parking/applications", async (req, res) => controllers.adminController.getParkingApplications(req, res))
     router.put("/admin/parking/application/update", async (req, res) => controllers.adminController.updateParkingApplicationStatus(req, res))
     router.post("/admin/lost/item/add", async (req, res) => controllers.adminController.addLostItem(req, res))

@@ -18,6 +18,21 @@ export class AdminController {
         }
     }
 
+    async checkRole(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1];
+
+        if (!token) {
+            res.status(401).send("Unauthorized");
+        }
+        try {
+            const isValid = await this.adminService.checkRole(token);
+            return res.status(200).send({ isValid });
+        } catch (error) {
+            console.error("Error in checkRole:", error);
+            return res.status(500).send("Internal Server Error");
+        }
+    }
+
     async getParkingApplications(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1];
 

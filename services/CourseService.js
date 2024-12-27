@@ -47,32 +47,32 @@ export class CourseService {
                 return coursesData
             } else if (userRole === 'Teacher') {
                 const courseRefs = await this.admin.firestore().collection("teacher and course")
-                .where('Teacher', '==', uid)
-                .where('Teaching', '==', true)
-            const coursesData = await courseRefs.get().then(async (querySnapshot) => {
-                const courses = []
-                const coursePromises = []
+                    .where('Teacher', '==', uid)
+                    .where('Teaching', '==', true)
+                const coursesData = await courseRefs.get().then(async (querySnapshot) => {
+                    const courses = []
+                    const coursePromises = []
 
-                querySnapshot.forEach((doc) => {
-                    const courseData = doc.data();
-                    const coursePromise = courseData.Course.get().then(courseDoc => {
-                        const { Student, ...restCourseData } = courseData
-                        return {
-                            id: courseDoc.id,
-                            ...restCourseData,
-                            Course: courseDoc.data()
-                        };
+                    querySnapshot.forEach((doc) => {
+                        const courseData = doc.data();
+                        const coursePromise = courseData.Course.get().then(courseDoc => {
+                            const { Student, ...restCourseData } = courseData
+                            return {
+                                id: courseDoc.id,
+                                ...restCourseData,
+                                Course: courseDoc.data()
+                            };
+                        })
+                        coursePromises.push(coursePromise)
                     })
-                    coursePromises.push(coursePromise)
+
+                    const resolvedCourses = await Promise.all(coursePromises)
+                    courses.push(...resolvedCourses)
+
+                    return courses
                 })
 
-                const resolvedCourses = await Promise.all(coursePromises)
-                courses.push(...resolvedCourses)
-
-                return courses
-            })
-
-            return coursesData 
+                return coursesData
             }
         } catch (error) {
             throw new Error(error.message)
@@ -223,6 +223,16 @@ export class CourseService {
             stream.on('finish', () => {
                 console.log('File uploaded successfully');
             });
+
+            // create a new submission record in the database
+            const submissionRef = this.admin.firestore().collection("student and assignment").doc().set({
+                'Student': uid,
+                'Assignment': this.admin.firestore().collection('assignment').doc(assignmentId),
+                'Submission Date': new Date(),
+                'Submitted File': fileName,
+                'Point': 0,
+                'Feedback': '',
+            })
 
             stream.end(file.buffer);
 

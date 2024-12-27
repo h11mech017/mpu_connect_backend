@@ -1,18 +1,42 @@
+import { UserService } from "./UserService.js";
 
 export class AdminService {
     constructor(admin) {
         this.admin = admin;
+        this.userService = new UserService(admin);
     }
 
     async checkAdmin(token) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token);
             const uid = decodedToken.uid;
+            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const userDoc = await userRef.get()
 
-            const userRef = await this.admin.firestore().collection('users').doc(uid);
-            const userDoc = await userRef.get();
+            await this.admin.auth().verifyIdToken(token);
+            const role = await this.userService.getUserRole(token);
 
-            if (userDoc.exists && userDoc.data()['Role'] === 'Admin') {
+            if (userDoc.exists && role === "Admin"){
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
+    async checkRole(token) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const userDoc = await userRef.get()
+
+            await this.admin.auth().verifyIdToken(token);
+            const role = await this.userService.getUserRole(token);
+
+            if (userDoc.exists && (role === "Admin" || role === "Teacher")) {
                 return true;
             } else {
                 return false;
