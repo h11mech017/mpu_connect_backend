@@ -153,6 +153,52 @@ export class CourseService {
         }
     }
 
+    async getCourseAssignmentFiles(token, courseId, assignmentId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const bucket = this.admin.storage().bucket()
+            const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`
+
+            const [assignments] = await bucket.getFiles({ prefix: rootPrefix })
+
+            if (!Array.isArray(assignments)) {
+                console.error('Unexpected response from getFiles:', assignments)
+                throw new Error('Unexpected response from storage')
+            }
+
+
+            let allFiles = await Promise.all(assignments.map(async (file) => {
+                file.fileName = file.name.replace(rootPrefix, '')
+
+                let downloadUrl = null
+                let metadata = null
+                if (!file.name.endsWith('/')) {
+                    [downloadUrl] = await file.getSignedUrl({
+                        action: 'read',
+                        expires: Date.now() + 3600000 // 1 hour from now
+                    });
+
+                    [metadata] = await file.getMetadata()
+                }
+                return {
+                    name: file.fileName,
+                    path: file.name,
+                    downloadUrl: downloadUrl,
+                    contentType: metadata?.contentType,
+                    size: metadata?.size ? parseInt(metadata.size, 10) : null,
+                }
+            }))
+            allFiles = allFiles.filter(file => file !== null && file.name !== '')
+
+            return allFiles
+
+        } catch (error) {
+            console.error('Error listing contents:', error)
+            throw error
+        }
+    }
+
     async getAssignmentSubmissions(token, courseId, assignmentId) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
@@ -247,10 +293,6 @@ export class CourseService {
             console.error('Error submitting assignment:', error)
             throw error
         }
-    }
-
-    async gradeAssignment(token, courseId, assignmentId, submissionId, grade, feedback) {
-        
     }
 
 
