@@ -111,5 +111,26 @@ export class CourseController {
         }
     }
 
+    async uploadCourseFile(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const path = req.body.directory
+        const file = req.file
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.uploadCourseFile(token, courseId, path, file)
+
+            if (result) {
+                res.status(200).json(result)
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
 
 }

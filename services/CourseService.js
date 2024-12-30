@@ -84,16 +84,16 @@ export class CourseService {
 
     async getCourseFiles(token, courseId) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const bucket = this.admin.storage().bucket();
-            const rootPrefix = `courses/${courseId}/`;
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const bucket = this.admin.storage().bucket()
+            const rootPrefix = `courses/${courseId}/`
 
             const [files] = await bucket.getFiles({ prefix: rootPrefix })
 
             if (!Array.isArray(files)) {
-                console.error('Unexpected response from getFiles:', files);
-                throw new Error('Unexpected response from storage');
+                console.error('Unexpected response from getFiles:', files)
+                throw new Error('Unexpected response from storage')
             }
 
             let allFiles = await Promise.all(files.map(async (file) => {
@@ -124,15 +124,15 @@ export class CourseService {
 
             return allFiles
         } catch (error) {
-            console.error('Error listing contents:', error);
-            throw error;
+            console.error('Error listing contents:', error)
+            throw error
         }
     }
 
     async getCourseAssignments(token, courseId) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
 
             const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
             const assignments = await assignmentRef.get().then((querySnapshot) => {
@@ -148,130 +148,86 @@ export class CourseService {
 
             return assignments
         } catch (error) {
-            console.error('Error listing contents:', error);
-            throw error;
-        }
-    }
-
-    async getCourseAssignmentFiles(token, courseId, assignmentId) {
-        try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const bucket = this.admin.storage().bucket();
-            const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`;
-
-            const [assignments] = await bucket.getFiles({ prefix: rootPrefix })
-
-            if (!Array.isArray(assignments)) {
-                console.error('Unexpected response from getFiles:', assignments);
-                throw new Error('Unexpected response from storage');
-            }
-
-
-            let allFiles = await Promise.all(assignments.map(async (file) => {
-                file.fileName = file.name.replace(rootPrefix, '')
-
-                let downloadUrl = null
-                let metadata = null
-                if (!file.name.endsWith('/')) {
-                    [downloadUrl] = await file.getSignedUrl({
-                        action: 'read',
-                        expires: Date.now() + 3600000 // 1 hour from now
-                    });
-
-                    [metadata] = await file.getMetadata();
-                }
-                return {
-                    name: file.fileName,
-                    path: file.name,
-                    downloadUrl: downloadUrl,
-                    contentType: metadata?.contentType,
-                    size: metadata?.size ? parseInt(metadata.size, 10) : null,
-                }
-            }))
-            allFiles = allFiles.filter(file => file !== null && file.name !== '')
-
-            return allFiles;
-
-        } catch (error) {
-            console.error('Error listing contents:', error);
-            throw error;
+            console.error('Error listing contents:', error)
+            throw error
         }
     }
 
     async getAssignmentSubmissions(token, courseId, assignmentId) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
             const role = await this.userService.getUserRole(token)
-            
+            const bucket = this.admin.storage().bucket()
+    
+            async function getDownloadUrl(fileName) {
+                const file = bucket.file(fileName)
+                const [url] = await file.getSignedUrl({
+                    action: 'read',
+                    expires: Date.now() + 3600000 // 1 hour from now
+                })
+                return url
+            }
+    
+            async function fetchSubmissions(submissionRef) {
+                const submissions = await submissionRef.get().then(async (querySnapshot) => {
+                    const submissions = []
+                    for (const doc of querySnapshot.docs) {
+                        const data = doc.data()
+                        const downloadUrl = await getDownloadUrl(data['Submitted File'])
+                        submissions.push({
+                            id: doc.id,
+                            ...data,
+                            downloadUrl
+                        })
+                    }
+                    return submissions
+                })
+                return submissions
+            }
+    
             if (role === 'Teacher') {
-            const submissionRef = this.admin.firestore().collection("student and assignment")
-                .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
-                    .collection('assignments').doc(assignmentId))
-            const submissions = await submissionRef.get().then((querySnapshot) => {
-                const submissions = []
-                querySnapshot.forEach((doc) => {
-                    submissions.push({
-                        id: doc.id,
-                        ...doc.data(),
-                    })
-                })
-                return submissions
-            })
-
-            return submissions
-        } else {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-
-            const submissionRef = this.admin.firestore().collection("student and assignment")
-                .where('Student', '==', uid)
-                .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
-                    .collection('assignments').doc(assignmentId))
-            const submissions = await submissionRef.get().then((querySnapshot) => {
-                const submissions = []
-                querySnapshot.forEach((doc) => {
-                    submissions.push({
-                        id: doc.id,
-                        ...doc.data(),
-                    })
-                })
-                return submissions
-            })
-
-            return submissions
-        }
+                const submissionRef = this.admin.firestore().collection("student and assignment")
+                    .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
+                        .collection('assignments').doc(assignmentId))
+                return await fetchSubmissions(submissionRef)
+            } else {
+                const uid = decodedToken.uid
+                const submissionRef = this.admin.firestore().collection("student and assignment")
+                    .where('Student', '==', uid)
+                    .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
+                        .collection('assignments').doc(assignmentId))
+                return await fetchSubmissions(submissionRef)
+            }
         } catch (error) {
-            console.error('Error listing contents:', error);
-            throw error;
+            console.error('Error listing contents:', error)
+            throw error
         }
     }
 
     async submitAssignment(token, courseId, assignmentId, file) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const bucket = this.admin.storage().bucket();
-            const rootPrefix = `courses/${courseId}/assignment_submissions/${assignmentId}/`;
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const bucket = this.admin.storage().bucket()
+            const rootPrefix = `courses/${courseId}/assignment_submissions/${assignmentId}/`
 
-            const fileName = `${rootPrefix}${file.originalname}`;
-            const fileUpload = bucket.file(fileName);
+            const fileName = `${rootPrefix}${file.originalname}`
+            const fileUpload = bucket.file(fileName)
 
             const stream = fileUpload.createWriteStream({
                 metadata: {
                     contentType: file.mimetype,
                 },
-            });
+            })
 
             stream.on('error', (error) => {
-                console.error('Error uploading file:', error);
-                throw error;
-            });
+                console.error('Error uploading file:', error)
+                throw error
+            })
 
             stream.on('finish', () => {
-                console.log('File uploaded successfully');
-            });
+                console.log('File uploaded successfully')
+            })
 
             // create a new submission record in the database
             await this.admin.firestore().collection("student and assignment").doc().set({
@@ -284,12 +240,51 @@ export class CourseService {
                 'Feedback': '',
             })
 
-            stream.end(file.buffer);
+            stream.end(file.buffer)
+
+            return true
+        } catch (error) {
+            console.error('Error submitting assignment:', error)
+            throw error
+        }
+    }
+
+    async gradeAssignment(token, courseId, assignmentId, submissionId, grade, feedback) {
+        
+    }
+
+
+    async uploadCourseFile(token, courseId, path, file) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+            const bucket = this.admin.storage().bucket();
+            const rootPrefix = `courses/${courseId}/${path}/`
+
+            const fileName = `${rootPrefix}${file.originalname}`
+            const fileUpload = bucket.file(fileName)
+
+            const stream = fileUpload.createWriteStream({
+                metadata: {
+                    contentType: file.mimetype,
+                },
+            })
+
+            stream.on('error', (error) => {
+                console.error('Error uploading file:', error)
+                throw error
+            })
+
+            stream.on('finish', () => {
+                console.log('File uploaded successfully')
+            })
+
+            stream.end(file.buffer)
 
             return true;
         } catch (error) {
-            console.error('Error submitting assignment:', error);
-            throw error;
+            console.error('Error uploading file:', error)
+            throw error
         }
     }
 }

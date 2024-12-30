@@ -44,6 +44,7 @@ export function setupRoutes() {
     //Course routes
     router.get("/user/courses", async (req, res) => controllers.courseController.getUserCourses(req, res))
     router.get("/user/courses/:courseId/files", async (req, res) => controllers.courseController.getCourseFiles(req, res))
+    router.post("/user/courses/:courseId/files/upload", upload.single('file'), async (req, res) => controllers.courseController.uploadCourseFile(req, res))
     router.get("/user/courses/:courseId/assignments", async (req, res) => controllers.courseController.getCourseAssignments(req, res))
     router.get("/user/courses/:courseId/assignments/:assignmentId/files", async (req, res) => controllers.courseController.getCourseAssignmentFiles(req, res))
     router.get("/user/courses/:courseId/assignments/:assignmentId/submissions", async (req, res) => controllers.courseController.getAssignmentSubmissions(req, res))
