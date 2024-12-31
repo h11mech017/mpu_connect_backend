@@ -111,6 +111,28 @@ export class CourseController {
         }
     }
 
+    async gradeAssignment(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const submissionId = req.body.id
+        const score = req.body.data.Score
+        const feedback = req.body.data.Feedback
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.gradeAssignment(token, submissionId, score, feedback)
+
+            if (result) {
+
+                res.status(200).json({ message: "Assignment graded successfully" })
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async uploadCourseFile(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId

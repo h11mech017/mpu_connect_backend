@@ -203,8 +203,9 @@ export class CourseService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const role = await this.userService.getUserRole(token)
+            const admin = this.admin
             const bucket = this.admin.storage().bucket()
-    
+
             async function getDownloadUrl(fileName) {
                 const file = bucket.file(fileName)
                 const [url] = await file.getSignedUrl({
@@ -213,24 +214,30 @@ export class CourseService {
                 })
                 return url
             }
-    
+
             async function fetchSubmissions(submissionRef) {
                 const submissions = await submissionRef.get().then(async (querySnapshot) => {
                     const submissions = []
                     for (const doc of querySnapshot.docs) {
+                        const studentDoc = await admin.firestore().collection('users').doc(doc.data()['Student']).get()
                         const data = doc.data()
+                        const StudentData = studentDoc.data()
                         const downloadUrl = await getDownloadUrl(data['Submitted File'])
+
+                        const { Student, ...restData } = data
+
                         submissions.push({
                             id: doc.id,
-                            ...data,
-                            downloadUrl
+                            Student: StudentData['Student Info']['Student ID'],
+                            ...restData,
+                            downloadUrl: downloadUrl
                         })
                     }
                     return submissions
                 })
                 return submissions
             }
-    
+
             if (role === 'Teacher') {
                 const submissionRef = this.admin.firestore().collection("student and assignment")
                     .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
@@ -282,7 +289,7 @@ export class CourseService {
                     .collection('assignments').doc(assignmentId),
                 'Submission Date': new Date(),
                 'Submitted File': fileName,
-                'Point': 0,
+                'Score': 0,
                 'Feedback': '',
             })
 
@@ -294,6 +301,31 @@ export class CourseService {
             throw error
         }
     }
+
+    async gradeAssignment(token, submissionId, score, feedback) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
+
+            const submissionDoc = await this.admin.firestore().collection("student and assignment").doc(submissionId)
+
+            await submissionDoc.update({
+                'Score': score,
+                'Feedback': feedback,
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error grading assignment:', error)
+            throw error
+        }
+    }
+
 
 
     async uploadCourseFile(token, courseId, path, file) {
