@@ -242,7 +242,18 @@ export class CourseService {
                 const submissionRef = this.admin.firestore().collection("student and assignment")
                     .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
                         .collection('assignments').doc(assignmentId))
-                return await fetchSubmissions(submissionRef)
+                const submissions = await fetchSubmissions(submissionRef)
+
+                const latestSubmissions = {}
+                submissions.forEach(submission => {
+                    const studentId = submission.Student
+                    if (submission['Student'] == studentId && (!latestSubmissions[studentId] || latestSubmissions[studentId]['Submission Date'] < submission['Submission Date'])) {
+                        latestSubmissions[studentId] = submission
+                        console.log(latestSubmissions)
+                    }
+                })
+
+                return Object.values(latestSubmissions)
             } else {
                 const uid = decodedToken.uid
                 const submissionRef = this.admin.firestore().collection("student and assignment")
