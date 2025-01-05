@@ -43,6 +43,44 @@ export class CourseController {
         }
     }
 
+    async addCourseAssignment(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const assignmentData = req.body.formData
+        const files = req.files
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.addCourseAssignment(token, courseId, assignmentData, files)
+            res.status(200).json(result)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    async deleteCourseAssignment(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const assignmentId = req.params.assignmentId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.deleteCourseAssignment(token, courseId, assignmentId)
+
+            if (result) {
+                res.status(200).json({ message: "Assignment deleted successfully" })
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async getCourseAssignments(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId
@@ -93,6 +131,28 @@ export class CourseController {
         }
     }
 
+    async updateCourseAssignment(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const assignmentId = req.params.assignmentId
+        const assignmentData = req.body.formData
+        const files = req.files
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.updateCourseAssignment(token, courseId, assignmentId, assignmentData, files)
+            
+            if (result) {
+                res.status(200).json({ message: "Assignment updated successfully" })
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async submitAssignment(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId
@@ -105,7 +165,10 @@ export class CourseController {
 
         try {
             const result = await this.courseService.submitAssignment(token, courseId, assignmentId, file)
-            res.status(200).json({ message: "Assignment submitted successfully" })
+
+            if (result) {
+                res.status(200).json({ message: "Assignment submitted successfully" })
+            }
         } catch (error) {
             res.status(500).json({ error: error.message })
         }

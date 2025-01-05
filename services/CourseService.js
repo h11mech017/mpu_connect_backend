@@ -129,12 +129,138 @@ export class CourseService {
         }
     }
 
+    async addCourseAssignment(token, courseId, assignmentData, files) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const bucket = this.admin.storage().bucket()
+
+            assignmentData = JSON.parse(assignmentData)
+
+            const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
+            const newAssignment = await assignmentRef.add({
+                'Title': assignmentData['Title'],
+                'Detail': assignmentData['Detail'],
+                'Available Date': assignmentData['Available Date'],
+                'Due Date': assignmentData['Due Date'],
+                'Submission Deadline': assignmentData['Submission Deadline'],
+                'Highest Score': assignmentData['Highest Score'],
+                'Visible': assignmentData['Visible'],
+                'Created By': uid,
+                'is Deleted': false,
+            })
+
+            const assignmentId = newAssignment.id
+            const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`
+
+            for (const file of files) {
+                const fileName = `${rootPrefix}${file.originalname}`
+                const fileUpload = bucket.file(fileName)
+
+                const stream = fileUpload.createWriteStream({
+                    metadata: {
+                        contentType: file.mimetype,
+                    },
+                })
+
+                stream.on('error', (error) => {
+                    console.error('Error uploading file:', error)
+                    throw error
+                })
+
+                stream.on('finish', () => {
+                    console.log('File uploaded successfully')
+                })
+
+                stream.end(file.buffer)
+            }
+
+            return true
+        } catch (error) {
+            console.error('Error adding assignment:', error)
+            throw error
+        }
+    }
+
+    async updateCourseAssignment(token, courseId, assignmentId, assignmentData, files) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const bucket = this.admin.storage().bucket()
+
+            assignmentData = JSON.parse(assignmentData)
+
+            const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments").doc(assignmentId)
+            await assignmentRef.update({
+                'Title': assignmentData['Title'],
+                'Detail': assignmentData['Detail'],
+                'Available Date': assignmentData['Available Date'],
+                'Due Date': assignmentData['Due Date'],
+                'Submission Deadline': assignmentData['Submission Deadline'],
+                'Highest Score': assignmentData['Highest Score'],
+                'Visible': assignmentData['Visible'],
+            })
+
+            const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`
+
+            for (const file of files) {
+                const fileName = `${rootPrefix}${file.originalname}`
+                const fileUpload = bucket.file(fileName)
+
+                const stream = fileUpload.createWriteStream({
+                    metadata: {
+                        contentType: file.mimetype,
+                    },
+                })
+
+                stream.on('error', (error) => {
+                    console.error('Error uploading file:', error)
+                    throw error
+                })
+
+                stream.on('finish', () => {
+                    console.log('File uploaded successfully')
+                })
+
+                stream.end(file.buffer)
+            }
+
+            return true
+        } catch (error) {
+            console.error('Error adding assignment:', error)
+            throw error
+        }
+    }
+
+    async deleteCourseAssignment(token, courseId, assignmentId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
+
+            const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments").doc(assignmentId)
+            await assignmentRef.update({
+                'is Deleted': true,
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error deleting assignment:', error)
+            throw error
+        }
+    }
+
     async getCourseAssignments(token, courseId) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
 
             const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
+                .where('is Deleted', '==', false)
             const assignments = await assignmentRef.get().then((querySnapshot) => {
                 const assignments = []
                 querySnapshot.forEach((doc) => {
