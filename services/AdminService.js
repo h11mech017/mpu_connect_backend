@@ -8,29 +8,29 @@ export class AdminService {
 
     async checkAdmin(token) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const userRef = this.admin.firestore().collection("users").doc(uid)
             const userDoc = await userRef.get()
 
-            await this.admin.auth().verifyIdToken(token);
-            const role = await this.userService.getUserRole(token);
+            await this.admin.auth().verifyIdToken(token)
+            const role = await this.userService.getUserRole(token)
 
             if (userDoc.exists && role === "Admin"){
-                return true;
+                return true
             } else {
-                return false;
+                return false
             }
         } catch (error) {
-            throw new Error(error.message);
+            throw new Error(error.message)
         }
     }
 
     async checkRole(token) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const userRef = this.admin.firestore().collection("users").doc(uid)
             const userDoc = await userRef.get()
 
             await this.admin.auth().verifyIdToken(token);

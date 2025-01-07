@@ -1,8 +1,4 @@
-import multer from "multer"
 import { UserService } from "./UserService.js"
-
-
-const upload = multer({ storage: multer.memoryStorage() })
 
 export class CourseService {
     constructor(firebaseAdmin) {
@@ -17,69 +13,59 @@ export class CourseService {
 
             const userRole = await this.userService.getUserRole(token)
 
+            const courseRefs = null
             if (userRole === 'Student') {
-                const courseRefs = await this.admin.firestore().collection("student and course")
+                courseRefs = await this.admin.firestore().collection("student and course")
                     .where('Student', '==', uid)
                     .where('Enrolled', '==', true)
-                const coursesData = await courseRefs.get().then(async (querySnapshot) => {
-                    const courses = []
-                    const coursePromises = []
-
-                    querySnapshot.forEach((doc) => {
-                        const courseData = doc.data();
-                        const coursePromise = courseData.Course.get().then(courseDoc => {
-                            const { Student, ...restCourseData } = courseData
-                            return {
-                                id: courseDoc.id,
-                                ...restCourseData,
-                                Course: courseDoc.data()
-                            };
-                        })
-                        coursePromises.push(coursePromise)
-                    })
-
-                    const resolvedCourses = await Promise.all(coursePromises)
-                    courses.push(...resolvedCourses)
-
-                    return courses
-                })
-
-                return coursesData
             } else if (userRole === 'Teacher') {
-                const courseRefs = await this.admin.firestore().collection("teacher and course")
+                courseRefs = await this.admin.firestore().collection("teacher and course")
                     .where('Teacher', '==', uid)
                     .where('Teaching', '==', true)
-                const coursesData = await courseRefs.get().then(async (querySnapshot) => {
-                    const courses = []
-                    const coursePromises = []
+            }
 
-                    querySnapshot.forEach((doc) => {
-                        const courseData = doc.data();
-                        const coursePromise = courseData.Course.get().then(courseDoc => {
-                            const { Student, ...restCourseData } = courseData
-                            return {
-                                id: courseDoc.id,
-                                ...restCourseData,
-                                Course: courseDoc.data()
-                            };
-                        })
-                        coursePromises.push(coursePromise)
+            const coursesData = await courseRefs.get().then(async (querySnapshot) => {
+                const courses = []
+                const coursePromises = []
+
+                querySnapshot.forEach((doc) => {
+                    const courseData = doc.data();
+                    const coursePromise = courseData.Course.get().then(courseDoc => {
+                        const { Student, ...restCourseData } = courseData
+                        return {
+                            id: courseDoc.id,
+                            ...restCourseData,
+                            Course: courseDoc.data()
+                        };
                     })
-
-                    const resolvedCourses = await Promise.all(coursePromises)
-                    courses.push(...resolvedCourses)
-
-                    return courses
+                    coursePromises.push(coursePromise)
                 })
 
-                return coursesData
-            }
+                const resolvedCourses = await Promise.all(coursePromises)
+                courses.push(...resolvedCourses)
+
+                return courses
+            })
+
+            return coursesData
         } catch (error) {
             throw new Error(error.message)
         }
     }
 
-    async getCourseDetail(token, courseId) {
+    async getCourseSchedule(token, courseId) {
+        try {
+            await this.admin.auth().verifyIdToken(token)
+
+            const scheduleRef = await this.admin.firestore().collection("course schedule")
+                .where('Course', '==', courseId)
+            const scheduleSnapshot = await scheduleRef.get()
+            const scheduleData = scheduleSnapshot.docs[0].data()
+
+            return scheduleData
+        } catch (error) {
+            throw new Error(error.message)
+        }
     }
 
     async getCourseFiles(token, courseId) {
@@ -144,7 +130,7 @@ export class CourseService {
                 'Available Date': assignmentData['Available Date'],
                 'Due Date': assignmentData['Due Date'],
                 'Submission Deadline': assignmentData['Submission Deadline'],
-                'Highest Score': Number(assignmentData['Highest Score']),
+                'Highest Score': parseFloat(assignmentData['Highest Score']),
                 'Visible': assignmentData['Visible'],
                 'Created By': uid,
                 'is Deleted': false,
@@ -259,15 +245,15 @@ export class CourseService {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
             const role = await this.userService.getUserRole(token)
-            const assignmentRef = null;
 
-            if (role !== 'Teacher') {
+            const assignmentRef = null
+            if (role === 'Teacher') {
                 assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
                     .where('is Deleted', '==', false)
             } else if (role === 'Student') {
                 assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
-                .where('is Deleted', '==', false)
-                .where('Visible', '==', true)
+                    .where('is Deleted', '==', false)
+                    .where('Visible', '==', true)
             }
 
             const assignments = await assignmentRef.get().then((querySnapshot) => {
