@@ -259,15 +259,17 @@ export class CourseService {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
             const role = await this.userService.getUserRole(token)
+            const assignmentRef = null;
 
             if (role !== 'Teacher') {
-                const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
+                assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
                     .where('is Deleted', '==', false)
             } else if (role === 'Student') {
-                const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
+                assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
                 .where('is Deleted', '==', false)
                 .where('Visible', '==', true)
             }
+
             const assignments = await assignmentRef.get().then((querySnapshot) => {
                 const assignments = []
                 querySnapshot.forEach((doc) => {
