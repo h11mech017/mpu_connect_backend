@@ -144,7 +144,7 @@ export class CourseService {
                 'Available Date': assignmentData['Available Date'],
                 'Due Date': assignmentData['Due Date'],
                 'Submission Deadline': assignmentData['Submission Deadline'],
-                'Highest Score': assignmentData['Highest Score'],
+                'Highest Score': Number(assignmentData['Highest Score']),
                 'Visible': assignmentData['Visible'],
                 'Created By': uid,
                 'is Deleted': false,
@@ -258,9 +258,16 @@ export class CourseService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
 
-            const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
+            if (role !== 'Teacher') {
+                const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
+                    .where('is Deleted', '==', false)
+            } else if (role === 'Student') {
+                const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
                 .where('is Deleted', '==', false)
+                .where('Visible', '==', true)
+            }
             const assignments = await assignmentRef.get().then((querySnapshot) => {
                 const assignments = []
                 querySnapshot.forEach((doc) => {
