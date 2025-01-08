@@ -62,7 +62,9 @@ export class CourseController {
 
         try {
             const result = await this.courseService.addCourseAssignment(token, courseId, assignmentData, files)
-            res.status(200).json(result)
+            if (result) {
+                res.status(200).json({ message: "Assignment added successfully" })
+            }
         } catch (error) {
             res.status(500).json({ error: error.message })
         }

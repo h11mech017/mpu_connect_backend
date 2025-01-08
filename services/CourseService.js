@@ -13,7 +13,7 @@ export class CourseService {
 
             const userRole = await this.userService.getUserRole(token)
 
-            const courseRefs = null
+            let courseRefs = null
             if (userRole === 'Student') {
                 courseRefs = await this.admin.firestore().collection("student and course")
                     .where('Student', '==', uid)
@@ -136,6 +136,8 @@ export class CourseService {
                 'is Deleted': false,
             })
 
+            console.log(newAssignment)
+
             const assignmentId = newAssignment.id
             const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`
 
@@ -246,7 +248,7 @@ export class CourseService {
             const uid = decodedToken.uid
             const role = await this.userService.getUserRole(token)
 
-            const assignmentRef = null
+            let assignmentRef = null
             if (role === 'Teacher') {
                 assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
                     .where('is Deleted', '==', false)
