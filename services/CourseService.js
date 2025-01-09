@@ -55,7 +55,7 @@ export class CourseService {
 
     async getCourseSchedule(token, courseId) {
         try {
-            await this.admin.auth().verifyIdToken(token)
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
 
             const scheduleRef = await this.admin.firestore().collection("course schedule")
                 .where('Course', '==', courseId)
@@ -65,6 +65,40 @@ export class CourseService {
             return scheduleData
         } catch (error) {
             throw new Error(error.message)
+        }
+    }
+
+    async uploadCourseFile(token, courseId, path, file) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token);
+            const uid = decodedToken.uid;
+            const bucket = this.admin.storage().bucket();
+            const rootPrefix = `courses/${courseId}/${path}/`
+
+            const fileName = `${rootPrefix}${file.originalname}`
+            const fileUpload = bucket.file(fileName)
+
+            const stream = fileUpload.createWriteStream({
+                metadata: {
+                    contentType: file.mimetype,
+                },
+            })
+
+            stream.on('error', (error) => {
+                console.error('Error uploading file:', error)
+                throw error
+            })
+
+            stream.on('finish', () => {
+                console.log('File uploaded successfully')
+            })
+
+            stream.end(file.buffer)
+
+            return true;
+        } catch (error) {
+            console.error('Error uploading file:', error)
+            throw error
         }
     }
 
@@ -115,6 +149,29 @@ export class CourseService {
         }
     }
 
+    async deleteCourseFile(token, courseId, filepath) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+            const prefix = `courses/${courseId}/${filepath}`
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
+
+            const bucket = this.admin.storage().bucket()
+            const file = bucket.file(prefix)
+
+            await file.delete()
+
+            return true
+        } catch (error) {
+            console.error('Error deleting file:', error)
+            throw error
+        }
+    }
+
     async addCourseAssignment(token, courseId, assignmentData, files) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
@@ -135,8 +192,6 @@ export class CourseService {
                 'Created By': uid,
                 'is Deleted': false,
             })
-
-            console.log(newAssignment)
 
             const assignmentId = newAssignment.id
             const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`
@@ -456,42 +511,6 @@ export class CourseService {
             return true
         } catch (error) {
             console.error('Error grading assignment:', error)
-            throw error
-        }
-    }
-
-
-
-    async uploadCourseFile(token, courseId, path, file) {
-        try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const bucket = this.admin.storage().bucket();
-            const rootPrefix = `courses/${courseId}/${path}/`
-
-            const fileName = `${rootPrefix}${file.originalname}`
-            const fileUpload = bucket.file(fileName)
-
-            const stream = fileUpload.createWriteStream({
-                metadata: {
-                    contentType: file.mimetype,
-                },
-            })
-
-            stream.on('error', (error) => {
-                console.error('Error uploading file:', error)
-                throw error
-            })
-
-            stream.on('finish', () => {
-                console.log('File uploaded successfully')
-            })
-
-            stream.end(file.buffer)
-
-            return true;
-        } catch (error) {
-            console.error('Error uploading file:', error)
             throw error
         }
     }

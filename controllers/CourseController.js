@@ -50,6 +50,26 @@ export class CourseController {
         }
     }
 
+    async deleteCourseFile(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const filepath = req.headers.filepath
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.deleteCourseFile(token, courseId, filepath)
+
+            if (result) {
+                res.status(200).json({ message: "File deleted successfully" })
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async addCourseAssignment(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId
