@@ -49,6 +49,7 @@ export function setupRoutes() {
     router.post("/user/courses/:courseId/files/upload", upload.single('file'), async (req, res) => controllers.courseController.uploadCourseFile(req, res))
     router.get("/user/courses/:courseId/assignments", async (req, res) => controllers.courseController.getCourseAssignments(req, res))
     router.post("/user/courses/:courseId/assignments/add", upload.array('files'), async (req, res) => controllers.courseController.addCourseAssignment(req, res))
+    router.get("/user/courses/:courseId/grades", async (req, res) => controllers.courseController.getUserAssignmentGrades(req, res))
     router.post("/user/courses/:courseId/assignments/:assignmentId/update", upload.array('files'), async (req, res) => controllers.courseController.updateCourseAssignment(req, res))
     router.put("/user/courses/:courseId/assignments/:assignmentId/delete", async (req, res) => controllers.courseController.deleteCourseAssignment(req, res))
     router.get("/user/courses/:courseId/assignments/:assignmentId/files", async (req, res) => controllers.courseController.getCourseAssignmentFiles(req, res))

@@ -160,6 +160,22 @@ export class CourseController {
         }
     }
 
+    async getUserAssignmentGrades(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const grades = await this.courseService.getUserAssignmentGrades(token, courseId)
+            res.status(200).json(grades)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async updateCourseAssignment(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId

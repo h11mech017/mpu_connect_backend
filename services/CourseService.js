@@ -316,9 +316,11 @@ export class CourseService {
             const assignments = await assignmentRef.get().then((querySnapshot) => {
                 const assignments = []
                 querySnapshot.forEach((doc) => {
+                    const docData = doc.data()
+                    const { 'Created By': createdBy, ...restData } = docData
                     assignments.push({
                         id: doc.id,
-                        ...doc.data(),
+                        ...restData
                     })
                 })
                 return assignments
@@ -444,6 +446,30 @@ export class CourseService {
             console.error('Error listing contents:', error)
             throw error
         }
+    }
+
+    async getUserAssignmentGrades(token, courseId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const role = await this.userService.getUserRole(token)
+
+            if (role == 'Student') {
+                const assignments = await this.getCourseAssignments(token, courseId)
+                for (var assignment of assignments) {
+                    const submission = await this.getAssignmentSubmissions(token, courseId, assignment.id)
+                    if (submission.length > 0) {
+                        assignment['Latest Submission'] = submission[0]
+                    }
+                }
+
+                return assignments
+            }
+        } catch (error) {
+            console.error('Error listing contents:', error)
+            throw error
+        }
+
+
     }
 
     async submitAssignment(token, courseId, assignmentId, file) {
