@@ -458,7 +458,7 @@ export class CourseService {
                 for (var assignment of assignments) {
                     const submission = await this.getAssignmentSubmissions(token, courseId, assignment.id)
                     if (submission.length > 0) {
-                        assignment['Latest Submission'] = submission[0]
+                        assignment['Latest Submission'] = submission.pop()
                     }
                 }
 
