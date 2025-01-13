@@ -53,6 +53,27 @@ export class CourseService {
         }
     }
 
+    async getHolidays(token, academicYear) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            const holidays = await this.admin.firestore().collection("holidays")
+                .where('Academic Year', '==', academicYear)
+                .get().then((querySnapshot) => {
+                    const holidays = []
+                    querySnapshot.forEach((doc) => {
+                        holidays.push(doc.data())
+                    })
+                    return holidays
+                })
+
+            return holidays
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
     async getCourseSchedule(token, courseId) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
