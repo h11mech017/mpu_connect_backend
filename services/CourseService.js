@@ -63,7 +63,11 @@ export class CourseService {
                 .get().then((querySnapshot) => {
                     const holidays = []
                     querySnapshot.forEach((doc) => {
-                        holidays.push(doc.data())
+                        holidays.push({
+                            id: doc.id,
+                            ...doc.data()
+                        }
+                        )
                     })
                     return holidays
                 })
