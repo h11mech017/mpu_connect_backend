@@ -452,9 +452,9 @@ export class CourseService {
                 const latestSubmissions = {}
                 submissions.forEach(submission => {
                     const studentId = submission.Student
-                    if (submission['Student'] == studentId && (!latestSubmissions[studentId] || latestSubmissions[studentId]['Submission Date'] < submission['Submission Date'])) {
+                    if (submission['Student'] == studentId && (!latestSubmissions[studentId] 
+                        || latestSubmissions[studentId]['Submission Date'] < submission['Submission Date'])) {
                         latestSubmissions[studentId] = submission
-                        console.log(latestSubmissions)
                     }
                 })
 
@@ -481,9 +481,11 @@ export class CourseService {
             if (role == 'Student') {
                 const assignments = await this.getCourseAssignments(token, courseId)
                 for (var assignment of assignments) {
-                    const submission = await this.getAssignmentSubmissions(token, courseId, assignment.id)
-                    if (submission.length > 0) {
-                        assignment['Latest Submission'] = submission.pop()
+                    const submissions = await this.getAssignmentSubmissions(token, courseId, assignment.id)
+                    submissions.sort((a, b) => b['Submission Date'] - a['Submission Date'])
+
+                    if (submissions.length > 0) {
+                        assignment['Latest Submission'] = submissions[0]
                     }
                 }
 
