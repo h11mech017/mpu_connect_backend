@@ -18,6 +18,22 @@ export class CourseController {
         }
     }
 
+    async getCourseAnnouncements(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const announcements = await this.courseService.getCourseAnnouncements(token, courseId)
+            res.status(200).json(announcements)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async getHolidays(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const academicYear = req.params.academicYear

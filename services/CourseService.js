@@ -53,6 +53,31 @@ export class CourseService {
         }
     }
 
+    async getCourseAnnouncements(token, courseId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            const announcementRef = this.admin.firestore().collection('course announcements')
+                .where('Course', '==', courseId)
+            const announcements = await announcementRef.get().then((querySnapshot) => {
+                const announcements = []
+                querySnapshot.forEach((doc) => {
+                    announcements.push({
+                        id: doc.id,
+                        ...doc.data()
+                    })
+                })
+                return announcements
+            })
+
+            return announcements
+        } catch (error) {
+            console.error('Error listing contents:', error)
+            throw error
+        }
+    }
+
     async getHolidays(token, academicYear) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)

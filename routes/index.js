@@ -43,6 +43,7 @@ export function setupRoutes() {
 
     //Course routes
     router.get("/user/courses", async (req, res) => controllers.courseController.getUserCourses(req, res))
+    router.get("/user/courses/:courseId/announcements", async (req, res) => controllers.courseController.getCourseAnnouncements(req, res))
     router.get("/user/courses/holidays/:academicYear", async (req, res) => controllers.courseController.getHolidays(req, res))
     router.get("/user/courses/:courseId/schedule", async (req, res) => controllers.courseController.getCourseSchedule(req, res))
     router.get("/user/courses/:courseId/files", async (req, res) => controllers.courseController.getCourseFiles(req, res))
