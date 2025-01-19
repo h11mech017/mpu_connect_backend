@@ -458,13 +458,17 @@ export class CourseService {
 
                         submissions.push({
                             id: doc.id,
-                            Student: StudentData['Student Info']['Student ID'],
+                            'Student ID': StudentData['Student Info']['Student ID'],
+                            'Student Name': StudentData['Student Info']['Name'],
                             ...restData,
                             downloadUrl: downloadUrl
                         })
                     }
                     return submissions
                 })
+
+                submissions.sort((a, b) => b['Submission Date'] - a['Submission Date'])
+
                 return submissions
             }
 
