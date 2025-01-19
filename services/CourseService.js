@@ -480,8 +480,8 @@ export class CourseService {
 
                 const latestSubmissions = {}
                 submissions.forEach(submission => {
-                    const studentId = submission.Student
-                    if (submission['Student'] == studentId && (!latestSubmissions[studentId] 
+                    const studentId = submission['Student ID']
+                    if (submission['Student ID'] == studentId && (!latestSubmissions[studentId] 
                         || latestSubmissions[studentId]['Submission Date'] < submission['Submission Date'])) {
                         latestSubmissions[studentId] = submission
                     }
