@@ -429,7 +429,7 @@ export class CourseService {
         }
     }
 
-    async getAssignmentSubmissions(token, courseId, assignmentId) {
+    async getAssignmentSubmissions(token, courseId, section, assignmentId) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const role = await this.userService.getUserRole(token)
@@ -445,10 +445,16 @@ export class CourseService {
                 return url
             }
 
-            async function fetchSubmissions(submissionRef) {
-                const submissions = await submissionRef.get().then(async (querySnapshot) => {
+            async function fetchSubmissions(submissionRefs, sectionStudentRefs) {
+                if (sectionStudentRefs) {
                     const submissions = []
-                    for (const doc of querySnapshot.docs) {
+                    const studentUidDocs = await sectionStudentRefs.get()
+                    const submissionDocs = await submissionRefs.get()
+                    const studentUids = studentUidDocs.docs.map(doc => doc.data()['Student'])
+
+                    const studentSubmissions = submissionDocs.docs.filter(doc => studentUids.includes(doc.data()['Student']))
+
+                    for (const doc of studentSubmissions) {
                         const studentDoc = await admin.firestore().collection('users').doc(doc.data()['Student']).get()
                         const data = doc.data()
                         const StudentData = studentDoc.data()
@@ -465,23 +471,50 @@ export class CourseService {
                         })
                     }
                     return submissions
-                })
+                } else {
+                    const submissions = await submissionRefs.get().then(async (querySnapshot) => {
+                        const submissions = []
+                        for (const doc of querySnapshot.docs) {
+                            const studentDoc = await admin.firestore().collection('users').doc(doc.data()['Student']).get()
+                            const data = doc.data()
+                            const StudentData = studentDoc.data()
+                            const downloadUrl = await getDownloadUrl(data['Submitted File'])
 
-                submissions.sort((a, b) => b['Submission Date'] - a['Submission Date'])
+                            const { Student, ...restData } = data
 
-                return submissions
+                            submissions.push({
+                                id: doc.id,
+                                'Student ID': StudentData['Student Info']['Student ID'],
+                                'Student Name': StudentData['Student Info']['Name'],
+                                ...restData,
+                                downloadUrl: downloadUrl
+                            })
+                        }
+                        return submissions
+                    })
+
+                    submissions.sort((a, b) => b['Submission Date'] - a['Submission Date'])
+
+                    return submissions
+                }
             }
 
             if (role === 'Teacher') {
-                const submissionRef = this.admin.firestore().collection("student and assignment")
-                    .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
+                const sectionStudentRefs = await admin.firestore().collection("student and course")
+                    .where('Course', '==', admin.firestore().collection('courses').doc(courseId))
+                    .where('Section', '==', section)
+                    .where('Enrolled', '==', true)
+
+                const submissionRefs = this.admin.firestore().collection("student and assignment")
+                    .where('Assignment', '==', this.admin.firestore()
+                        .collection('courses').doc(courseId)
                         .collection('assignments').doc(assignmentId))
-                const submissions = await fetchSubmissions(submissionRef)
+                const submissions = await fetchSubmissions(submissionRefs, sectionStudentRefs)
 
                 const latestSubmissions = {}
                 submissions.forEach(submission => {
                     const studentId = submission['Student ID']
-                    if (submission['Student ID'] == studentId && (!latestSubmissions[studentId] 
+                    if (submission['Student ID'] == studentId && (!latestSubmissions[studentId]
                         || latestSubmissions[studentId]['Submission Date'] < submission['Submission Date'])) {
                         latestSubmissions[studentId] = submission
                     }
@@ -494,7 +527,7 @@ export class CourseService {
                     .where('Student', '==', uid)
                     .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
                         .collection('assignments').doc(assignmentId))
-                return await fetchSubmissions(submissionRef)
+                return await fetchSubmissions(submissionRef, null)
             }
         } catch (error) {
             console.error('Error listing contents:', error)
@@ -541,7 +574,8 @@ export class CourseService {
 
                                 submissions.push({
                                     id: doc.id,
-                                    Student: StudentData['Student Info']['Student ID'],
+                                    ['Student ID']: StudentData['Student Info']['Student ID'],
+                                    ['Student Name']: StudentData['Student Info']['Name'],
                                     ...restData,
                                 })
                             }
@@ -643,5 +677,131 @@ export class CourseService {
             console.error('Error grading assignment:', error)
             throw error
         }
+    }
+
+    async getCourseAttendances(token, courseId, section) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            const attendanceRefs = this.admin.firestore().collection("course attendance")
+                .where('Course', '==', courseId)
+                .where('Section', '==', section)
+
+            if (role === 'Teacher') {
+                const attendances = await attendanceRefs.get().then((querySnapshot) => {
+                    const attendances = []
+                    querySnapshot.forEach((doc) => {
+                        const { Students, ...restData } = doc.data()
+
+                        attendances.push({
+                            id: doc.id,
+                            ...restData,
+                        })
+                    })
+                    return attendances
+                })
+                return attendances
+            }
+        } catch (error) {
+            console.error('Error listing contents:', error)
+            throw error
+        }
+    }
+
+    async getAttendanceDetail(token, attendanceId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
+
+            const attendanceRef = this.admin.firestore().collection("course attendance").doc(attendanceId)
+            const attendanceDoc = await attendanceRef.get()
+            const attendanceData = attendanceDoc.data()
+
+            for (let i = 0; i < attendanceData.Students.length; i++) {
+                const studentDoc = await this.admin.firestore().collection('users').doc(attendanceData.Students[i]['Student']).get()
+                attendanceData.Students[i]['Student ID'] = studentDoc.data()['Student Info']['Student ID']
+                attendanceData.Students[i]['Name'] = studentDoc.data()['Student Info']['Name']
+            }
+
+            return attendanceData
+        } catch (error) {
+            console.error('Error listing contents:', error)
+            throw error
+        }
+    }
+
+    async takeAttendanceTeacher(token, attendanceId, studentUid, status) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
+
+            const attendanceRef = this.admin.firestore().collection("course attendance").doc(attendanceId)
+            const attendanceDoc = await attendanceRef.get()
+            const attendanceData = attendanceDoc.data()
+
+            const updatedStudents = attendanceData.Students.map(student => {
+                if (student.Student === studentUid) {
+                    return {
+                        ...student,
+                        Status: status
+                    }
+                }
+                return student
+            })
+
+            await attendanceRef.update({
+                'Students': updatedStudents
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error taking attendance:', error)
+            throw error
+        }
+    }
+
+    async studentCheckIn(token, attendanceId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            const attendanceRef = this.admin.firestore().collection("course attendance").doc(attendanceId)
+            const attendanceDoc = await attendanceRef.get()
+            const attendanceData = attendanceDoc.data()
+
+            const updatedStudents = attendanceData.Students.map(student => {
+                if (student.Student === uid) {
+                    return {
+                        ...student,
+                        Status: 'Present'
+                    }
+                }
+                else {
+                    throw new Error('You are not enrolled in this course')
+                }
+            })
+
+            await attendanceRef.update({
+                'Students': updatedStudents
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error taking attendance:', error)
+            throw error
+        }
+
     }
 }

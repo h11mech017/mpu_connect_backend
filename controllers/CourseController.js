@@ -178,6 +178,7 @@ export class CourseController {
     async getAssignmentSubmissions(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId
+        const section = req.params.section
         const assignmentId = req.params.assignmentId
 
         if (!token) {
@@ -185,7 +186,7 @@ export class CourseController {
         }
 
         try {
-            const submissions = await this.courseService.getAssignmentSubmissions(token, courseId, assignmentId)
+            const submissions = await this.courseService.getAssignmentSubmissions(token, courseId, section, assignmentId)
             res.status(200).json(submissions)
         } catch (error) {
             res.status(500).json({ error: error.message })
@@ -291,6 +292,81 @@ export class CourseController {
             }
         } catch (error) {
             res.status(500).json({ error: error.message })
+        }
+    }
+
+    async getCourseAttendances(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const section = req.params.section
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const attendances = await this.courseService.getCourseAttendances(token, courseId, section)
+            res.status(200).json(attendances)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    async getAttendanceDetail(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const attendanceId = req.params.attendanceId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const attendance = await this.courseService.getAttendanceDetail(token, attendanceId)
+            res.status(200).json(attendance)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    async takeAttendanceTeacher(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const attendanceId = req.params.attendanceId
+        const studentUid = req.body.id
+        const status = req.body.data
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.takeAttendanceTeacher(token, attendanceId, studentUid, status)
+
+            if (result) {
+                res.status(200).json({ message: "Attendance taken successfully" })
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ meassage: "Failed to take attendance" })
+        }
+    }
+
+    async studentCheckIn(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const section = req.params.section
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.studentCheckIn(token, courseId, section)
+
+            if (result) {
+                res.status(200).json({ message: "Check in successful" })
+            }
+        } catch (error) {
+            res.status(500).json({ message: "Failed to check in" })
         }
     }
 
