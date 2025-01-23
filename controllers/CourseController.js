@@ -352,15 +352,16 @@ export class CourseController {
 
     async studentCheckIn(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
-        const courseId = req.params.courseId
-        const section = req.params.section
+        const attendanceId = req.params.attendanceId
+        const hash = req.query.hash
+        const timestamp = req.query.timestamp
 
         if (!token) {
             res.status(401).send("Unauthorized")
         }
 
         try {
-            const result = await this.courseService.studentCheckIn(token, courseId, section)
+            const result = await this.courseService.studentCheckIn(token, attendanceId, hash, timestamp)
 
             if (result) {
                 res.status(200).json({ message: "Check in successful" })

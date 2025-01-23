@@ -1,4 +1,5 @@
 import { UserService } from "./UserService.js"
+import crypto from 'crypto'
 
 export class CourseService {
     constructor(firebaseAdmin) {
@@ -772,7 +773,23 @@ export class CourseService {
         }
     }
 
-    async studentCheckIn(token, attendanceId) {
+    async studentCheckIn(token, attendanceId, hash, timestamp) {
+        const role = await this.userService.getUserRole(token)
+
+        if (role !== 'Student') {
+            throw new Error('Unauthorized')
+        }
+
+        const currentTime = Date.now()
+        if (Math.abs(currentTime - timestamp) > 10000) {
+            return res.status(400).send('QR code expired')
+        }
+
+        const expectedHash = crypto.createHash('sha256').update(apiEndpoint + timestamp).digest('hex')
+        if (hash !== expectedHash) {
+            return res.status(400).send('Invalid QR code')
+        }
+
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
