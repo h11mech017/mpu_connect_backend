@@ -805,9 +805,6 @@ export class CourseService {
                         Status: 'Present'
                     }
                 }
-                else {
-                    throw new Error('You are not enrolled in this course')
-                }
             })
 
             await attendanceRef.update({
