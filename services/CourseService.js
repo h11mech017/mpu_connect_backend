@@ -781,7 +781,7 @@ export class CourseService {
         }
 
         const currentTime = Date.now()
-        if (Math.abs(currentTime - timestamp) > 10000) {
+        if (Math.abs(currentTime - timestamp) > 1000000) {
             return res.status(400).send('QR code expired')
         }
 
