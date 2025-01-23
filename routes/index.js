@@ -60,6 +60,7 @@ export function setupRoutes() {
     router.post("/user/courses/:courseId/assignments/:assignmentId/submit", upload.single('file'), async (req, res) => controllers.courseController.submitAssignment(req, res))
     router.get("/user/courses/:courseId/:section/attendance", async (req, res) => controllers.courseController.getCourseAttendances(req, res))
     router.get("/user/courses/:courseId/:section/attendance/:attendanceId", async (req, res) => controllers.courseController.getAttendanceDetail(req, res))
+    router.post("/user/courses/:courseId/:section/attendance/add", async (req, res) => controllers.courseController.addCourseAttendance(req, res))
     router.put("/user/courses/:courseId/:section/attendance/:attendanceId/update", async (req, res) => controllers.courseController.takeAttendanceTeacher(req, res))
     router.get("/user/courses/:courseId/:section/attendance/:attendanceId/checkin", async (req, res) => controllers.courseController.studentCheckIn(req, res))
 

@@ -30,7 +30,7 @@ export class CourseService {
                 const coursePromises = []
 
                 querySnapshot.forEach((doc) => {
-                    const courseData = doc.data();
+                    const courseData = doc.data()
                     const coursePromise = courseData.Course.get().then(courseDoc => {
                         const { Student, ...restCourseData } = courseData
                         return {
@@ -59,22 +59,87 @@ export class CourseService {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
 
-            const announcementRef = this.admin.firestore().collection('course announcements')
+
+            const announcementRefs = this.admin.firestore().collection('course announcements')
                 .where('Course', '==', courseId)
-            const announcements = await announcementRef.get().then((querySnapshot) => {
-                const announcements = []
-                querySnapshot.forEach((doc) => {
-                    announcements.push({
-                        id: doc.id,
-                        ...doc.data()
-                    })
+
+            const announcements = []
+
+            const querySnapshot = await announcementRefs.get()
+            const announcementPromises = querySnapshot.docs.map(async (doc) => {
+                const author = await this.admin.firestore().collection('users').doc(doc.data()['From']).get()
+                const authorName = author.data()['Teacher Info']['Name']
+                const { From, ...restData } = doc.data()
+                announcements.push({
+                    id: doc.id,
+                    'From': authorName,
+                    ...restData
                 })
-                return announcements
             })
+
+            await Promise.all(announcementPromises)
 
             return announcements
         } catch (error) {
             console.error('Error listing contents:', error)
+            throw error
+        }
+    }
+
+    async addCourseAnnouncement(token, courseId, announcementData) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            const announcementRef = this.admin.firestore().collection('course announcements')
+            const newAnnouncement = await announcementRef.add({
+                'Course': courseId,
+                'From': uid,
+                'Title': announcementData['Title'],
+                'Content': announcementData['Content'],
+                'Post Date': new Date(),
+                'is Test': announcementData['is Test'],
+                'Test Date': announcementData['Test Date'],
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error adding announcement:', error)
+            throw error
+        }
+    }
+
+    async editCourseAnnouncement(token, announcementId, announcementData) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            const announcementRef = this.admin.firestore().collection('course announcements').doc(announcementId)
+            await announcementRef.update({
+                'Title': announcementData['Title'],
+                'Content': announcementData['Content'],
+                'is Test': announcementData['is Test'],
+                'Test Date': announcementData['Test Date'],
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error editing announcement:', error)
+            throw error
+        }
+    }
+
+    async deleteCourseAnnouncement(token, announcementId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            const announcementRef = this.admin.firestore().collection('course announcements').doc(announcementId)
+            await announcementRef.delete()
+
+            return true
+        } catch (error) {
+            console.error('Error deleting announcement:', error)
             throw error
         }
     }
@@ -97,7 +162,6 @@ export class CourseService {
                     })
                     return holidays
                 })
-
             return holidays
         } catch (error) {
             throw new Error(error.message)
@@ -738,6 +802,49 @@ export class CourseService {
         }
     }
 
+    async addCourseAttendance(token, courseId, section) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
+
+            const enrolledStudent = await this.admin.firestore().collection("student and course")
+                .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
+                .where('Section', '==', section)
+                .where('Enrolled', '==', true)
+                .get().then((querySnapshot) => {
+                    const students = []
+                    querySnapshot.forEach((doc) => {
+                        students.push({
+                            Student: doc.data()['Student'],
+                            Status: 'Absent',
+                        })
+                    })
+                    return students
+                })
+
+            const attendanceRef = this.admin.firestore().collection("course attendance")
+
+            const newAttendance = await attendanceRef.add({
+                'Academic Year': process.env.ACADEMIC_YEAR,
+                'Course': courseId,
+                'Section': section,
+                'Class Date': new Date(),
+                'Updated At': new Date(),
+                'Students': enrolledStudent,
+            })
+
+            return newAttendance.id
+        } catch (error) {
+            console.error('Error adding attendance:', error)
+            throw error
+        }
+    }
+
     async takeAttendanceTeacher(token, attendanceId, studentUid, status) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
@@ -756,6 +863,7 @@ export class CourseService {
                 if (student.Student === studentUid) {
                     return {
                         ...student,
+                        'Updated At': new Date(),
                         Status: status
                     }
                 }
@@ -763,7 +871,7 @@ export class CourseService {
             })
 
             await attendanceRef.update({
-                'Students': updatedStudents
+                'Students': updatedStudents,
             })
 
             return true
@@ -781,7 +889,7 @@ export class CourseService {
         }
 
         const currentTime = Date.now()
-        if (Math.abs(currentTime - timestamp) > 1000000) {
+        if (Math.abs(currentTime - timestamp) > 10000) {
             throw new Error('QR code expired')
         }
 
@@ -806,6 +914,7 @@ export class CourseService {
                 if (student.Student === uid) {
                     return {
                         ...student,
+                        'Updated At': new Date(),
                         Status: 'Present'
                     }
                 }
