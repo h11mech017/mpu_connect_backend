@@ -788,6 +788,8 @@ export class CourseService {
         const apiEndpoint = `${process.env.BACKEND_URL}/user/courses/${courseId}/${section}/attendance/${attendanceId}/checkin`
 
         const expectedHash = crypto.createHash('sha256').update(apiEndpoint + timestamp).digest('hex')
+        console.log('hash:', hash)
+        console.log('Expected hash:', expectedHash)
         if (hash !== expectedHash) {
             throw new Error('Invalid QR code')
         }
