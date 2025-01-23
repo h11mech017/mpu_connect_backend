@@ -773,7 +773,7 @@ export class CourseService {
         }
     }
 
-    async studentCheckIn(token, attendanceId, hash, timestamp) {
+    async studentCheckIn(token, courseId, section, attendanceId, hash, timestamp) {
         const role = await this.userService.getUserRole(token)
 
         if (role !== 'Student') {
@@ -782,12 +782,14 @@ export class CourseService {
 
         const currentTime = Date.now()
         if (Math.abs(currentTime - timestamp) > 1000000) {
-            return res.status(400).send('QR code expired')
+            throw new Error('QR code expired')
         }
+
+        const apiEndpoint = `${process.env.BACKEND_URL}/user/courses/${courseId}/${section}/attendance/${attendanceId}/checkin`
 
         const expectedHash = crypto.createHash('sha256').update(apiEndpoint + timestamp).digest('hex')
         if (hash !== expectedHash) {
-            return res.status(400).send('Invalid QR code')
+            throw new Error('Invalid QR code')
         }
 
         try {

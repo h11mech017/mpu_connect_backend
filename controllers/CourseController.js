@@ -352,6 +352,8 @@ export class CourseController {
 
     async studentCheckIn(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const section = req.params.section
         const attendanceId = req.params.attendanceId
         const hash = req.query.hash
         const timestamp = req.query.timestamp
@@ -361,12 +363,13 @@ export class CourseController {
         }
 
         try {
-            const result = await this.courseService.studentCheckIn(token, attendanceId, hash, timestamp)
+            const result = await this.courseService.studentCheckIn(token, courseId, section, attendanceId, hash, timestamp)
 
             if (result) {
                 res.status(200).json({ message: "Check in successful" })
             }
         } catch (error) {
+            console.log(error)
             res.status(500).json({ message: "Failed to check in" })
         }
     }
