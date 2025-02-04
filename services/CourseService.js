@@ -62,6 +62,7 @@ export class CourseService {
 
             const announcementRefs = this.admin.firestore().collection('course announcements')
                 .where('Course', '==', courseId)
+                .where('is Deleted', '==', false)
 
             const announcements = []
 
@@ -90,9 +91,14 @@ export class CourseService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
 
             const announcementRef = this.admin.firestore().collection('course announcements')
-            const newAnnouncement = await announcementRef.add({
+            await announcementRef.add({
                 'Course': courseId,
                 'From': uid,
                 'Title': announcementData['Title'],
@@ -100,6 +106,7 @@ export class CourseService {
                 'Post Date': new Date(),
                 'is Test': announcementData['is Test'],
                 'Test Date': announcementData['Test Date'],
+                'is Deleted': false,
             })
 
             return true
@@ -109,10 +116,15 @@ export class CourseService {
         }
     }
 
-    async editCourseAnnouncement(token, announcementId, announcementData) {
+    async updateCourseAnnouncement(token, announcementId, announcementData) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
 
             const announcementRef = this.admin.firestore().collection('course announcements').doc(announcementId)
             await announcementRef.update({
@@ -133,9 +145,16 @@ export class CourseService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
 
             const announcementRef = this.admin.firestore().collection('course announcements').doc(announcementId)
-            await announcementRef.delete()
+            await announcementRef.update({
+                'is Deleted': true,
+            })
 
             return true
         } catch (error) {

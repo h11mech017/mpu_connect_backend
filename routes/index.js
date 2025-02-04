@@ -43,12 +43,23 @@ export function setupRoutes() {
 
     //Course routes
     router.get("/user/courses", async (req, res) => controllers.courseController.getUserCourses(req, res))
+
+    //Course announcement routes
     router.get("/user/courses/:courseId/announcements", async (req, res) => controllers.courseController.getCourseAnnouncements(req, res))
+    router.post("/user/courses/:courseId/announcements/add", async (req, res) => controllers.courseController.addCourseAnnouncement(req, res))
+    router.put("/user/courses/:courseId/announcements/:announcementId/update", async (req, res) => controllers.courseController.updateCourseAnnouncement(req, res))
+    router.put("/user/courses/:courseId/announcements/:announcementId/delete", async (req, res) => controllers.courseController.deleteCourseAnnouncement(req, res))
+
+    //Course schedule routes
     router.get("/user/courses/holidays/:academicYear", async (req, res) => controllers.courseController.getHolidays(req, res))
     router.get("/user/courses/:courseId/schedule", async (req, res) => controllers.courseController.getCourseSchedule(req, res))
+
+    //File routes
     router.get("/user/courses/:courseId/files", async (req, res) => controllers.courseController.getCourseFiles(req, res))
     router.delete("/user/courses/:courseId/files/delete", async (req, res) => controllers.courseController.deleteCourseFile(req, res))
     router.post("/user/courses/:courseId/files/upload", upload.single('file'), async (req, res) => controllers.courseController.uploadCourseFile(req, res))
+
+    //Assignment routes
     router.get("/user/courses/:courseId/assignments", async (req, res) => controllers.courseController.getCourseAssignments(req, res))
     router.post("/user/courses/:courseId/assignments/add", upload.array('files'), async (req, res) => controllers.courseController.addCourseAssignment(req, res))
     router.get("/user/courses/:courseId/grades", async (req, res) => controllers.courseController.getUserAssignmentGrades(req, res))
@@ -58,6 +69,8 @@ export function setupRoutes() {
     router.get("/user/courses/:courseId/:section/assignments/:assignmentId/submissions", async (req, res) => controllers.courseController.getAssignmentSubmissions(req, res))
     router.put("/user/courses/:courseId/assignments/:assignmentId/submissions/grading", async (req, res) => controllers.courseController.gradeAssignment(req, res))
     router.post("/user/courses/:courseId/assignments/:assignmentId/submit", upload.single('file'), async (req, res) => controllers.courseController.submitAssignment(req, res))
+
+    //Attendance routes
     router.get("/user/courses/:courseId/:section/attendance", async (req, res) => controllers.courseController.getCourseAttendances(req, res))
     router.get("/user/courses/:courseId/:section/attendance/:attendanceId", async (req, res) => controllers.courseController.getAttendanceDetail(req, res))
     router.post("/user/courses/:courseId/:section/attendance/add", async (req, res) => controllers.courseController.addCourseAttendance(req, res))

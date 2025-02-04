@@ -18,6 +18,26 @@ export class CourseController {
         }
     }
 
+    async addCourseAnnouncement(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const announcementData = req.body
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.addCourseAnnouncement(token, courseId, announcementData)
+
+            if (result) {
+                res.status(200).json({ message: "Announcement added successfully" })
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async getCourseAnnouncements(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
         const courseId = req.params.courseId
@@ -29,6 +49,46 @@ export class CourseController {
         try {
             const announcements = await this.courseService.getCourseAnnouncements(token, courseId)
             res.status(200).json(announcements)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    async updateCourseAnnouncement(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const announcementId = req.body.id
+        const announcementData = req.body.data
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.updateCourseAnnouncement(token, announcementId, announcementData)
+
+            if (result) {
+                res.status(200).json({ message: "Announcement updated successfully" })
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    async deleteCourseAnnouncement(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const announcementId = req.params.announcementId
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const result = await this.courseService.deleteCourseAnnouncement(token, announcementId)
+
+            if (result) {
+                res.status(200).json({ message: "Announcement deleted successfully" })
+            }
         } catch (error) {
             res.status(500).json({ error: error.message })
         }
