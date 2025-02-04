@@ -1,13 +1,13 @@
 export class UserService {
     constructor(firebaseAdmin) {
-        this.admin = firebaseAdmin;
+        this.admin = firebaseAdmin
     }
 
     async getUserProfile(token) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const userRef = this.admin.firestore().collection("users").doc(uid)
             const userDoc = await userRef.get()
             const userData = userDoc.data()
             if (userData['Role'] === 'Student') {
@@ -31,20 +31,76 @@ export class UserService {
                 return userData
             }
         } catch (error) {
-            throw new Error(error.message);
+            throw new Error(error.message)
         }
     }
 
     async getUserRole(token) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
-            const userRef = this.admin.firestore().collection("users").doc(uid);
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const userRef = this.admin.firestore().collection("users").doc(uid)
             const userDoc = await userRef.get()
             const userData = userDoc.data()
             return userData['Role']
         } catch (error) {
-            throw new Error(error.message);
+            throw new Error(error.message)
+        }
+    }
+
+    async getUserAssignments(token) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+    
+            const userRole = await this.getUserRole(token)
+    
+            let courseRefs = null
+            if (userRole === 'Student') {
+                courseRefs = await this.admin.firestore().collection("student and course")
+                    .where('Student', '==', uid)
+                    .where('Enrolled', '==', true)
+            } else if (userRole === 'Teacher') {
+                courseRefs = await this.admin.firestore().collection("teacher and course")
+                    .where('Teacher', '==', uid)
+                    .where('Teaching', '==', true)
+            }
+    
+            const assignmentData = await courseRefs.get().then(async (querySnapshot) => {
+                const courses = []
+                const coursePromises = []
+    
+                querySnapshot.forEach((doc) => {
+                    const courseData = doc.data()
+                    const coursePromise = courseData.Course.get().then(async (courseDoc) => {
+                        const { Student, ...restCourseData } = courseData
+                        const assignmentsRef = this.admin.firestore().collection("courses").doc(courseDoc.id).collection("assignments")
+                        const assignmentsSnapshot = await assignmentsRef.where('is Deleted', '==', false).get()
+    
+                        const assignments = assignmentsSnapshot.docs.map(assignmentDoc => ({
+                            id: assignmentDoc.id,
+                            ...assignmentDoc.data()
+                        }))
+    
+                        return {
+                            id: courseDoc.id,
+                            'Course Code': courseDoc.data()['Course Code'],
+                            'Course Name': courseDoc.data()['Course Name'],
+                            Assignments: assignments
+                        }
+                    })
+                    coursePromises.push(coursePromise)
+                })
+    
+                const resolvedCourses = await Promise.all(coursePromises)
+                courses.push(...resolvedCourses)
+    
+                return courses
+            })
+    
+            return assignmentData
+        } catch (error) {
+            throw new Error(error.message)
         }
     }
 
