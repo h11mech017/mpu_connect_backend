@@ -20,7 +20,7 @@ export function setupRoutes() {
     //User routes
     router.get("/user/profile", async (req, res) => controllers.userController.getUserProfile(req, res))
     router.get("/user/role", async (req, res) => controllers.userController.getUserRole(req, res))
-    router.get("/user/announcements", async (req, res) => controllers.userController.getUserAnnouncements(req, res))
+    router.get("/user/courses/announcements", async (req, res) => controllers.userController.getUserAnnouncements(req, res))
     router.get("/user/assignments", async (req, res) => controllers.userController.getUserAssignments(req, res))
 
     //Parking routes
