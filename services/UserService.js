@@ -48,6 +48,70 @@ export class UserService {
         }
     }
 
+    async getUserAnnouncements(token) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+    
+            const userRole = await this.getUserRole(token)
+    
+            let courseRefs = null
+            if (userRole === 'Student') {
+                courseRefs = await this.admin.firestore().collection("student and course")
+                    .where('Student', '==', uid)
+                    .where('Enrolled', '==', true)
+            } else if (userRole === 'Teacher') {
+                courseRefs = await this.admin.firestore().collection("teacher and course")
+                    .where('Teacher', '==', uid)
+                    .where('Teaching', '==', true)
+            }
+    
+            const announcementData = await courseRefs.get().then(async (querySnapshot) => {
+                const coursePromises = []
+    
+                querySnapshot.forEach((doc) => {
+                    const enrollData = doc.data()
+                    const coursePromise = enrollData.Course.get().then(async (courseDoc) => {
+                        const { Student, Section, ...restCourseData } = enrollData
+                        const announcementsRef = this.admin.firestore().collection("course announcements").where('Course', '==', courseDoc.id)
+                        const announcementsSnapshot = await announcementsRef.where('is Deleted', '==', false).get()
+    
+                        let announcements = announcementsSnapshot.docs.map(announcementDoc => {
+                            const announcementData = announcementDoc.data()
+                            return {
+                                id: announcementDoc.id,
+                                ...announcementData
+                            }
+                        })
+    
+                        if (announcements.length > 0) {
+                            announcements.sort((a, b) => b['Post Date'] - a['Post Date'])
+    
+                            return {
+                                id: courseDoc.id,
+                                'Course Code': courseDoc.data()['Course Code'],
+                                'Course Name': courseDoc.data()['Course Name'],
+                                'Section': Section,
+                                Announcements: announcements
+                            }
+                        }
+                        return null
+                    })
+                    coursePromises.push(coursePromise)
+                })
+    
+                const resolvedCourses = await Promise.all(coursePromises)
+                const filteredCourses = resolvedCourses.filter(course => course !== null)
+    
+                return filteredCourses
+            })
+    
+            return announcementData
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
     async getUserAssignments(token) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)

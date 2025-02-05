@@ -80,6 +80,8 @@ export class CourseService {
 
             await Promise.all(announcementPromises)
 
+            announcements.sort((a, b) => b['Post Date'] - a['Post Date'])
+
             return announcements
         } catch (error) {
             console.error('Error listing contents:', error)
@@ -459,6 +461,8 @@ export class CourseService {
                 })
                 return assignments
             })
+
+            assignments.sort((a, b) => a['Due Date'] - b['Due Date'])
 
             return assignments
         } catch (error) {
