@@ -70,9 +70,9 @@ export class UserService {
                 const coursePromises = []
     
                 querySnapshot.forEach((doc) => {
-                    const courseData = doc.data()
-                    const coursePromise = courseData.Course.get().then(async (courseDoc) => {
-                        const { Student, ...restCourseData } = courseData
+                    const enrollData = doc.data()
+                    const coursePromise = enrollData.Course.get().then(async (courseDoc) => {
+                        const { Student, Section, ...restCourseData } = enrollData
                         const assignmentsRef = this.admin.firestore().collection("courses").doc(courseDoc.id).collection("assignments")
                         const assignmentsSnapshot = await assignmentsRef.where('is Deleted', '==', false).get()
     
@@ -100,6 +100,7 @@ export class UserService {
                                 id: courseDoc.id,
                                 'Course Code': courseDoc.data()['Course Code'],
                                 'Course Name': courseDoc.data()['Course Name'],
+                                'Section': Section,
                                 Assignments: assignments
                             }
                         }
