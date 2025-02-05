@@ -52,9 +52,9 @@ export class UserService {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
-
+    
             const userRole = await this.getUserRole(token)
-
+    
             let courseRefs = null
             if (userRole === 'Student') {
                 courseRefs = await this.admin.firestore().collection("student and course")
@@ -65,50 +65,55 @@ export class UserService {
                     .where('Teacher', '==', uid)
                     .where('Teaching', '==', true)
             }
-
+    
             const assignmentData = await courseRefs.get().then(async (querySnapshot) => {
-                const courses = []
                 const coursePromises = []
-
+    
                 querySnapshot.forEach((doc) => {
                     const courseData = doc.data()
                     const coursePromise = courseData.Course.get().then(async (courseDoc) => {
                         const { Student, ...restCourseData } = courseData
                         const assignmentsRef = this.admin.firestore().collection("courses").doc(courseDoc.id).collection("assignments")
                         const assignmentsSnapshot = await assignmentsRef.where('is Deleted', '==', false).get()
-
-                        const assignments = assignmentsSnapshot.docs.map(assignmentDoc => {
+    
+                        let assignments = assignmentsSnapshot.docs.map(assignmentDoc => {
                             const assignmentData = assignmentDoc.data()
-                            const dueDate = assignmentData['Due Date'].toDate()
+                            const dueDate = assignmentData['Due Date']
+                            const dueDateObj = new Date(dueDate._seconds * 1000 + dueDate._nanoseconds / 1000000) 
                             const currentDate = new Date()
-
-                            if (dueDate < currentDate) {
-                            return {
-                                id: assignmentDoc.id,
-                                ...assignmentData
+    
+                            if (currentDate <= dueDateObj) {
+                                return {
+                                    id: assignmentDoc.id,
+                                    ...assignmentData
+                                }
                             }
-                        }
+                            else {
+                                return null
+                            }
                         })
 
-                        if (assignments.length === 0) {
-                            return
+                        assignments = assignments.filter(assignment => assignment !== null)
+    
+                        if (assignments.length > 0) {
+                            return {
+                                id: courseDoc.id,
+                                'Course Code': courseDoc.data()['Course Code'],
+                                'Course Name': courseDoc.data()['Course Name'],
+                                Assignments: assignments
+                            }
                         }
-                        return {
-                            id: courseDoc.id,
-                            'Course Code': courseDoc.data()['Course Code'],
-                            'Course Name': courseDoc.data()['Course Name'],
-                            Assignments: assignments
-                        }
+                        return null
                     })
                     coursePromises.push(coursePromise)
                 })
-
+    
                 const resolvedCourses = await Promise.all(coursePromises)
-                courses.push(...resolvedCourses)
-
-                return courses
+                const filteredCourses = resolvedCourses.filter(course => course !== null)
+    
+                return filteredCourses
             })
-
+    
             return assignmentData
         } catch (error) {
             throw new Error(error.message)
