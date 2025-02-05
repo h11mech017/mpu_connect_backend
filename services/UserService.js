@@ -94,8 +94,10 @@ export class UserService {
                         })
 
                         assignments = assignments.filter(assignment => assignment !== null)
-    
+
                         if (assignments.length > 0) {
+                            assignments.sort((a, b) => a['Due Date']._seconds - b['Due Date']._seconds)
+    
                             return {
                                 id: courseDoc.id,
                                 'Course Code': courseDoc.data()['Course Code'],
