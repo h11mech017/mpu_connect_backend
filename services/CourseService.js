@@ -686,41 +686,10 @@ export class CourseService {
                     const assignments = []
                     for (const doc of querySnapshot.docs) {
                         const data = doc.data()
-                        const submissionRef = this.admin.firestore().collection("student and assignment")
-                            .where('Assignment', '==', this.admin.firestore().collection('courses').doc(courseId)
-                                .collection('assignments').doc(doc.id))
-                        const submissions = await submissionRef.get().then(async (querySnapshot) => {
-                            const submissions = []
-                            for (const doc of querySnapshot.docs) {
-                                const studentDoc = await this.admin.firestore().collection('users').doc(doc.data()['Student']).get()
-                                const data = doc.data()
-                                const StudentData = studentDoc.data()
-
-                                const { Student, ...restData } = data
-
-                                submissions.push({
-                                    id: doc.id,
-                                    ['Student ID']: StudentData['Student Info']['Student ID'],
-                                    ['Student Name']: StudentData['Student Info']['Name'],
-                                    ...restData,
-                                })
-                            }
-                            return submissions
-                        })
-
-                        const latestSubmissions = {}
-                        submissions.forEach(submission => {
-                            const studentId = submission.Student
-                            if (submission['Student'] == studentId && (!latestSubmissions[studentId]
-                                || latestSubmissions[studentId]['Submission Date'] < submission['Submission Date'])) {
-                                latestSubmissions[studentId] = submission
-                            }
-                        })
 
                         assignments.push({
                             id: doc.id,
                             ...data,
-                            'Submissions': Object.values(latestSubmissions)
                         })
                     }
                     return assignments
