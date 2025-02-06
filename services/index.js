@@ -6,6 +6,7 @@ import { LockerService } from "./LockerService.js";
 import { LostAndFoundService } from "./LostAndFoundService.js";
 import { EmailService } from "./EmailService.js";
 import { CourseService } from "./CourseService.js";
+import { CampusService } from "./CampusService.js";
 
 export function createServices() {
     return {
@@ -16,6 +17,7 @@ export function createServices() {
       lostAndFoundService: new LostAndFoundService(admin),
       emailService: new EmailService(),
       courseService: new CourseService(admin),
+      campusService: new CampusService(admin),
     };
   }
 

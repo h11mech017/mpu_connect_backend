@@ -5,6 +5,7 @@ import { ParkingController } from "./ParkingController.js"
 import { UserController } from "./UserController.js"
 import { EmailController } from "./EmailController.js"
 import { CourseController } from "./CourseController.js"
+import { CampusController } from "./CampusController.js"
 
 export function createControllers(services) {
   return {
@@ -15,5 +16,6 @@ export function createControllers(services) {
     lostAndFoundController: new LostAndFoundController(services.lostAndFoundService),
     emailController: new EmailController(services.emailService),
     courseController: new CourseController(services.courseService),
+    campusController: new CampusController(services.campusService),
   };
 }

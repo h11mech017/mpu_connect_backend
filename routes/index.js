@@ -79,6 +79,9 @@ export function setupRoutes() {
     router.put("/user/courses/:courseId/:section/attendance/:attendanceId/update", async (req, res) => controllers.courseController.takeAttendanceTeacher(req, res))
     router.get("/user/courses/:courseId/:section/attendance/:attendanceId/checkin", async (req, res) => controllers.courseController.studentCheckIn(req, res))
 
+    //Campus routes
+    router.get("/campus/shuttle/schedule", async (req, res) => controllers.campusController.getBusSchedules(req, res))
+
 
     return router
 }
