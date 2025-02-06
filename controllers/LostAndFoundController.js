@@ -25,9 +25,11 @@ export class LostAndFoundController {
 
     async getLostItems(req, res) {
         try {
+            const token = req.headers.authorization?.split("Bearer ")[1]
+
             const page = req.query.page
             const pageSize = req.query.pageSize
-            const lostItems = await this.lostAndFoundService.getLostItems(page, pageSize);
+            const lostItems = await this.lostAndFoundService.getLostItems(token, page, pageSize);
             return res.status(200).json(lostItems);
         } catch (error) {
             console.error("Error getting lost items:", error);
