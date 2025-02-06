@@ -7,6 +7,44 @@ export class CourseService {
         this.userService = new UserService(firebaseAdmin)
     }
 
+    async getEnrolledStudents(token, courseId, section) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const role = await this.userService.getUserRole(token)
+
+            if (role !== 'Teacher') {
+                throw new Error('Unauthorized')
+            }
+
+            const studentRefs = this.admin.firestore().collection("student and course")
+                .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
+                .where('Section', '==', section)
+                .where('Enrolled', '==', true)
+
+            const students = await studentRefs.get().then((querySnapshot) => {
+                const students = []
+                querySnapshot.forEach((doc) => {
+                    const student = this.admin.firestore().collection('users').doc(doc.data()['Student']).get().then((studentDoc) => {
+                        return {
+                            'Student ID': studentDoc.data()['Student Info']['Student ID'],
+                            'Name': studentDoc.data()['Student Info']['Name'],
+                        }
+                    })
+                    students.push({
+                        student
+                    })
+                })
+                return students
+            })
+
+            return students
+        } catch (error) {
+            console.error('Error listing contents:', error)
+            throw error
+        }
+    }
+
     async getUserCourses(token) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)

@@ -3,6 +3,23 @@ export class CourseController {
         this.courseService = courseService;
     }
 
+    async getEnrolledStudents(req, res) {
+        const token = req.headers.authorization?.split("Bearer ")[1]
+        const courseId = req.params.courseId
+        const section = req.params.section
+
+        if (!token) {
+            res.status(401).send("Unauthorized")
+        }
+
+        try {
+            const students = await this.courseService.getEnrolledStudents(token, courseId, section)
+            res.status(200).json(students)
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
     async getUserCourses(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
 

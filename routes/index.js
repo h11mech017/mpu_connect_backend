@@ -45,6 +45,7 @@ export function setupRoutes() {
 
     //Course routes
     router.get("/user/courses", async (req, res) => controllers.courseController.getUserCourses(req, res))
+    router.get("/user/courses/:courseId/:section/students", async (req, res) => controllers.courseController.getEnrolledStudents(req, res))
 
     //Course announcement routes
     router.get("/user/courses/:courseId/announcements", async (req, res) => controllers.courseController.getCourseAnnouncements(req, res))
