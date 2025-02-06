@@ -14,5 +14,16 @@ export class CampusController {
         }
     }
 
+    async getCanteenMenus(req, res) {
+        try {
+            const token = req.headers.authorization?.split("Bearer ")[1]
+            const menus = await this.campusService.getCanteenMenus(token);
+
+            res.status(200).send(menus);
+        } catch (error) {
+            res.status(500).send(error.message);
+        }
+    }
+
 
 }

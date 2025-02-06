@@ -25,5 +25,26 @@ export class CampusService {
         }
     }
 
+    async getCanteenMenus(token) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            const menuRefs = this.admin.firestore().collection("canteen menus")
+            const menuData = await menuRefs.get().then((querySnapshot) => {
+                const menus = []
+                querySnapshot.forEach((doc) => {
+                    menus.push({
+                        id: doc.id,
+                        ...doc.data(),
+                    })
+                })
+                return menus
+            })
+            return menuData
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
 
 }
