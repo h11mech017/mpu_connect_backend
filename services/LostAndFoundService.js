@@ -43,10 +43,14 @@ export class LostAndFoundService {
         }
     }
 
-    async getLostItems() {
+    async getLostItems(page = 1, pageSize = 10) {
         try {
-            const lostItemsRef = await this.admin.firestore().collection('lost and found')
-            const lostItemsData = await lostItemsRef.get().then((querySnapshot) => {
+            const lostItemsRef = this.admin.firestore().collection('lost and found')
+            
+            const offset = (page - 1) * pageSize
+    
+            const lostItemsQuery = lostItemsRef.orderBy('timestamp').startAfter(offset).limit(pageSize)
+            const lostItemsData = await lostItemsQuery.get().then((querySnapshot) => {
                 const lostItems = []
                 querySnapshot.forEach((doc) => {
                     lostItems.push({
@@ -56,6 +60,7 @@ export class LostAndFoundService {
                 })
                 return lostItems
             })
+    
             return lostItemsData
         } catch (error) {
             throw new Error(error.message)
