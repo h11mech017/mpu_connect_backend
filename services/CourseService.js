@@ -623,7 +623,7 @@ export class CourseService {
         }
     }
 
-    async getUserAssignmentGrades(token, courseId) {
+    async getUserAssignmentGrades(token, courseId, section) {
         try {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const role = await this.userService.getUserRole(token)
@@ -631,7 +631,7 @@ export class CourseService {
             if (role == 'Student') {
                 const assignments = await this.getCourseAssignments(token, courseId)
                 for (var assignment of assignments) {
-                    const submissions = await this.getAssignmentSubmissions(token, courseId, assignment.id)
+                    const submissions = await this.getAssignmentSubmissions(token, courseId, section, assignment.id)
                     submissions.sort((a, b) => b['Submission Date'] - a['Submission Date'])
 
                     if (submissions.length > 0) {
