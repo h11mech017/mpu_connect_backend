@@ -28,8 +28,8 @@ export class CampusController {
     async getCampusEvents(req, res) {
         try {
             const token = req.headers.authorization?.split("Bearer ")[1]
-            const page = req.query.page
-            const pageSize = req.query.pageSize
+            const page = parseInt(req.query.page, 1);
+            const pageSize = parseInt(req.query.pageSize, 10);
             const events = await this.campusService.getCampusEvents(token, page, pageSize);
 
             res.status(200).send(events);
@@ -37,6 +37,4 @@ export class CampusController {
             res.status(500).send(error.message);
         }
     }
-
-
 }
