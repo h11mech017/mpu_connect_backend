@@ -70,6 +70,10 @@ export class CampusService {
                     }
         
                     let allFiles = await Promise.all(files.map(async (file) => {
+                        if (file.name.endsWith('/')) {
+                            return null
+                        }
+
                         file.fileName = file.name.replace(rootPrefix, '')
         
                         let downloadUrl = null
