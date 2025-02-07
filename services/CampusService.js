@@ -93,7 +93,6 @@ export class CampusService {
                     allFiles = allFiles.filter(file => file !== null && file.name !== '')
         
                     return {
-                        id: doc.id,
                         ...doc.data(),
                         'Images': allFiles
                     }
