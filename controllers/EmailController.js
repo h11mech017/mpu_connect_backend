@@ -28,7 +28,7 @@ export class EmailController {
     async getEmails(req, res) {
         try {
             const { sessionId } = req.params
-            const page = parseInt(req.query.page, 1);
+            const page = parseInt(req.query.page, 10);
             const pageSize = parseInt(req.query.pageSize, 10);
             const emails = await this.emailService.getEmails(sessionId, page, pageSize)
             res.status(200).send(emails)
