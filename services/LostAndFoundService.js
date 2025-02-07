@@ -46,10 +46,8 @@ export class LostAndFoundService {
     async getLostItems(token, page = 1, pageSize = 10) {
         try {
             const lostItemsRef = this.admin.firestore().collection('lost and found')
-            
-            const offset = (page - 1) * pageSize
     
-            const lostItemsQuery = lostItemsRef.orderBy('Found Date').startAfter(offset).limit(pageSize)
+            const lostItemsQuery = lostItemsRef.orderBy('Found Date').limit(pageSize).offset((page - 1) * pageSize)
             const lostItemsData = await lostItemsQuery.get().then((querySnapshot) => {
                 const lostItems = []
                 querySnapshot.forEach((doc) => {

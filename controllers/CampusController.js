@@ -25,5 +25,18 @@ export class CampusController {
         }
     }
 
+    async getCampusEvents(req, res) {
+        try {
+            const token = req.headers.authorization?.split("Bearer ")[1]
+            const page = req.query.page
+            const pageSize = req.query.pageSize
+            const events = await this.campusService.getCampusEvents(token, page, pageSize);
+
+            res.status(200).send(events);
+        } catch (error) {
+            res.status(500).send(error.message);
+        }
+    }
+
 
 }

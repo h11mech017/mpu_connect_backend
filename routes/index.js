@@ -83,6 +83,7 @@ export function setupRoutes() {
     //Campus routes
     router.get("/campus/shuttle/schedule", async (req, res) => controllers.campusController.getBusSchedules(req, res))
     router.get("/campus/canteen/menu", async (req, res) => controllers.campusController.getCanteenMenus(req, res))
+    router.get("/campus/events", async (req, res) => controllers.campusController.getCampusEvents(req, res))
 
 
     return router

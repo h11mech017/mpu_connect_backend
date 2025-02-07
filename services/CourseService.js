@@ -516,15 +516,15 @@ export class CourseService {
             const bucket = this.admin.storage().bucket()
             const rootPrefix = `courses/${courseId}/assignment_files/${assignmentId}/`
 
-            const [assignments] = await bucket.getFiles({ prefix: rootPrefix })
+            const [files] = await bucket.getFiles({ prefix: rootPrefix })
 
-            if (!Array.isArray(assignments)) {
-                console.error('Unexpected response from getFiles:', assignments)
+            if (!Array.isArray(files)) {
+                console.error('Unexpected response from getFiles:', files)
                 throw new Error('Unexpected response from storage')
             }
 
 
-            let allFiles = await Promise.all(assignments.map(async (file) => {
+            let allFiles = await Promise.all(files.map(async (file) => {
                 file.fileName = file.name.replace(rootPrefix, '')
 
                 let downloadUrl = null
