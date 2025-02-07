@@ -95,7 +95,7 @@ export class CampusService {
                     return {
                         id: doc.id,
                         ...doc.data(),
-                        'images': allFiles
+                        'Images': allFiles
                     }
                 })
 
