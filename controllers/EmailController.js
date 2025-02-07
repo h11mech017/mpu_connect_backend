@@ -28,8 +28,14 @@ export class EmailController {
     async getEmails(req, res) {
         try {
             const { sessionId } = req.params
-            const page = parseInt(req.query.page, 10);
-            const pageSize = parseInt(req.query.pageSize, 10);
+            let page
+            if (req.query.page) {
+                page = parseInt(req.query.page, 10)
+            }
+            let pageSize
+            if (req.query.pageSize) {
+                pageSize = parseInt(req.query.pageSize, 10)
+            }
             const emails = await this.emailService.getEmails(sessionId, page, pageSize)
             res.status(200).send(emails)
         } catch (error) {
