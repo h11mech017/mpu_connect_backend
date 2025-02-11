@@ -1,6 +1,9 @@
+import { AdminService } from "./AdminService.js"
+
 export class CampusService {
     constructor(firebaseAdmin) {
         this.admin = firebaseAdmin
+        this.AdminService = new AdminService(firebaseAdmin)
     }
 
     async getBusSchedules(token) {
@@ -54,7 +57,7 @@ export class CampusService {
             const bucket = this.admin.storage().bucket()
             let rootPrefix = `events/`
 
-            const eventRefs = this.admin.firestore().collection("events")
+            const eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
             const eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
 
 
@@ -110,6 +113,136 @@ export class CampusService {
             return eventData
         } catch (error) {
             throw new Error(error.message)
+        }
+    }
+
+    async addCampusEvent(token, eventData, files) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const bucket = this.admin.storage().bucket()
+
+            if (!this.AdminService.checkAdmin(token)) {
+                throw new Error('Unauthorized')
+            }
+
+            eventData = JSON.parse(eventData)
+
+            const eventRef = this.admin.firestore().collection("events")
+            const newEvent = await eventRef.add({
+                'Headline': eventData['Headline'],
+                'Event Start Date': eventData['Event Start Date'],
+                'Event End Date': eventData['Event End Date'],
+                'Details': eventData['Details'],
+                'Post Date': new Date(),
+                'Created By': uid,
+                'is Deleted': false,
+            })
+
+            const eventId = newEvent.id
+            const rootPrefix = `events/${eventId}/`
+
+            for (const file of files) {
+                const fileName = `${rootPrefix}${file.originalname}`
+                const fileUpload = bucket.file(fileName)
+
+                const stream = fileUpload.createWriteStream({
+                    metadata: {
+                        contentType: file.mimetype,
+                    },
+                })
+
+                stream.on('error', (error) => {
+                    console.error('Error uploading file:', error)
+                    throw error
+                })
+
+                stream.on('finish', () => {
+                    console.log('File uploaded successfully')
+                })
+
+                stream.end(file.buffer)
+            }
+
+            return true
+        } catch (error) {
+            console.error('Error adding event:', error)
+            throw error
+        }
+    }
+
+    async updateCampusEvent(token, eventData, files) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+            const bucket = this.admin.storage().bucket()
+
+            if (!this.AdminService.checkAdmin(token)) {
+                throw new Error('Unauthorized')
+            }
+
+            eventData = JSON.parse(eventData)
+
+            const eventId = eventData['id']
+
+            const eventRef = this.admin.firestore().collection("events").doc(eventId)
+            await eventRef.update({
+                'Headline': eventData['Headline'],
+                'Details': eventData['Details'],
+                'Event Start Date': eventData['Event Start Date'],
+                'Event End Date': eventData['Event End Date'],
+                'Visible Date': eventData['Visible Date'],
+            })
+
+            const rootPrefix = `events/${eventId}/`
+
+            for (const file of files) {
+                const fileName = `${rootPrefix}${file.originalname}`
+                const fileUpload = bucket.file(fileName)
+
+                const stream = fileUpload.createWriteStream({
+                    metadata: {
+                        contentType: file.mimetype,
+                    },
+                })
+
+                stream.on('error', (error) => {
+                    console.error('Error uploading file:', error)
+                    throw error
+                })
+
+                stream.on('finish', () => {
+                    console.log('File uploaded successfully')
+                })
+
+                stream.end(file.buffer)
+            }
+
+            return true
+        } catch (error) {
+            console.error('Error adding event:', error)
+            throw error
+        }
+    }
+
+    async deleteCampusEvent(token, eventId) {
+        try {
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
+
+            if (!this.AdminService.checkAdmin(token)) {
+                throw new Error('Unauthorized')
+            }
+
+            const eventRef = this.admin.firestore().collection("events").doc(eventId)
+            await eventRef.update({
+                'is Deleted': true,
+            })
+
+            return true
+        } catch (error) {
+            console.error('Error deleting event:', error)
+            throw error
         }
     }
 

@@ -84,6 +84,9 @@ export function setupRoutes() {
     router.get("/campus/shuttle/schedule", async (req, res) => controllers.campusController.getBusSchedules(req, res))
     router.get("/campus/canteen/menu", async (req, res) => controllers.campusController.getCanteenMenus(req, res))
     router.get("/campus/events", async (req, res) => controllers.campusController.getCampusEvents(req, res))
+    router.post("/campus/events/add", upload.array('files'), async (req, res) => controllers.campusController.addCampusEvent(req, res))
+    router.post("/campus/events/:eventId/update", upload.array('files'), async (req, res) => controllers.campusController.updateCampusEvent(req, res))
+    router.put("/campus/events/:eventId/delete", async (req, res) => controllers.campusController.deleteCampusEvent(req, res))
 
 
     return router

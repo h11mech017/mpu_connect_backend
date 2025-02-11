@@ -354,6 +354,10 @@ export class CourseService {
 
             assignmentData = JSON.parse(assignmentData)
 
+            if (assignmentData['Visible'] === undefined) {
+                assignmentData['Visible'] = false
+            }
+
             const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments")
             const newAssignment = await assignmentRef.add({
                 'Title': assignmentData['Title'],
