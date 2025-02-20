@@ -23,21 +23,18 @@ export class CourseService {
                 .where('Enrolled', '==', true)
 
             const students = await studentRefs.get().then((querySnapshot) => {
-                const students = []
+                const studentPromises = []
                 querySnapshot.forEach((doc) => {
-                    const student = this.admin.firestore().collection('users').doc(doc.data()['Student']).get().then((studentDoc) => {
+                    const studentPromise = this.admin.firestore().collection('users').doc(doc.data()['Student']).get().then((studentDoc) => {
                         return {
                             'Student ID': studentDoc.data()['Student Info']['Student ID'],
                             'Name': studentDoc.data()['Student Info']['Name'],
                         }
                     })
-                    students.push({
-                        student
-                    })
+                    studentPromises.push(studentPromise)
                 })
-                return students
+                return Promise.all(studentPromises)
             })
-
             return students
         } catch (error) {
             console.error('Error listing contents:', error)

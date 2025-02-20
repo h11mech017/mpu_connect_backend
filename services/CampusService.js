@@ -55,30 +55,36 @@ export class CampusService {
             const decodedToken = await this.admin.auth().verifyIdToken(token)
             const uid = decodedToken.uid
             const bucket = this.admin.storage().bucket()
+            const role = await this.AdminService.checkAdmin(token)
             let rootPrefix = `events/`
 
-            const eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
-            const eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
+            if (role === true) {
+                const eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
+                const eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
+            } else {
+                const eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false).where("Visible Date", ">=", new Date())
+                const eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
+            }
 
 
             const eventData = await eventQuery.get().then(async (querySnapshot) => {
                 const eventPromises = querySnapshot.docs.map(async (doc) => {
                     rootPrefix = `events/${doc.id}/`
-                    
+
                     const [files] = await bucket.getFiles({ prefix: rootPrefix })
 
                     if (!Array.isArray(files)) {
                         console.error('Unexpected response from getFiles:', files)
                         throw new Error('Unexpected response from storage')
                     }
-        
+
                     let allFiles = await Promise.all(files.map(async (file) => {
                         if (file.name.endsWith('/')) {
                             return null
                         }
 
                         file.fileName = file.name.replace(rootPrefix, '')
-        
+
                         let downloadUrl = null
                         let metadata = null
                         if (!file.name.endsWith('/')) {
@@ -86,7 +92,7 @@ export class CampusService {
                                 action: 'read',
                                 expires: Date.now() + 3600000 // 1 hour from now
                             });
-        
+
                             [metadata] = await file.getMetadata()
                         }
                         return {
@@ -98,7 +104,7 @@ export class CampusService {
                         }
                     }))
                     allFiles = allFiles.filter(file => file !== null && file.name !== '')
-        
+
                     return {
                         id: doc.id,
                         ...doc.data(),
