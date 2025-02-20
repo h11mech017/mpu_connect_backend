@@ -61,11 +61,18 @@ export class CampusService {
             let eventRefs = null
             let eventQuery = null
 
+            const currentDate = new Date()
+            const timestamp = {
+                _seconds: Math.floor(currentDate.getTime() / 1000),
+                _nanoseconds: (currentDate.getMilliseconds() * 1e6)
+            }
+
             if (role === true) {
                 eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
                 eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             } else {
-                eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false).where("Visible Date", "<=", new Date())
+                eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
+                    .where("Visible Date", "<=", timestamp)
                 eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             }
 
@@ -137,15 +144,21 @@ export class CampusService {
 
             eventData = JSON.parse(eventData)
 
+            if (eventData['is Notification'] === undefined) {
+                eventData['is Notification'] = false
+            }
+
             const eventRef = this.admin.firestore().collection("events")
             const newEvent = await eventRef.add({
                 'Headline': eventData['Headline'],
                 'Event Start Date': eventData['Event Start Date'],
                 'Event End Date': eventData['Event End Date'],
+                'Visible Date': eventData['Visible Date'],
                 'Details': eventData['Details'],
                 'Post Date': new Date(),
                 'Created By': uid,
                 'is Deleted': false,
+                'is Notification': eventData['is Notification'],
             })
 
             const eventId = newEvent.id
