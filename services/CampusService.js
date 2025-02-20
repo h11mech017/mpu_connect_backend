@@ -58,12 +58,15 @@ export class CampusService {
             const role = await this.AdminService.checkAdmin(token)
             let rootPrefix = `events/`
 
+            let eventRefs = null
+            let eventQuery = null
+
             if (role === true) {
-                const eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
-                const eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
+                eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
+                eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             } else {
-                const eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false).where("Visible Date", ">=", new Date())
-                const eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
+                eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false).where("Visible Date", ">=", new Date())
+                eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             }
 
 
