@@ -65,7 +65,7 @@ export class CampusService {
                 eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
                 eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             } else {
-                eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false).where("Visible Date", ">=", new Date())
+                eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false).where("Visible Date", "<=", new Date())
                 eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             }
 
