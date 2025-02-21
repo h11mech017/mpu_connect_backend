@@ -134,6 +134,10 @@ export class CourseService {
                 throw new Error('Unauthorized')
             }
 
+            if (announcementData['is Test'] === undefined) {
+                announcementData['is Test'] = false
+            }
+
             const announcementRef = this.admin.firestore().collection('course announcements')
             await announcementRef.add({
                 'Course': courseId,
