@@ -789,21 +789,19 @@ export class CourseService {
                 .where('Course', '==', courseId)
                 .where('Section', '==', section)
 
-            if (role === 'Teacher') {
-                const attendances = await attendanceRefs.get().then((querySnapshot) => {
-                    const attendances = []
-                    querySnapshot.forEach((doc) => {
-                        const { Students, ...restData } = doc.data()
+            const attendances = await attendanceRefs.get().then((querySnapshot) => {
+                const attendances = []
+                querySnapshot.forEach((doc) => {
+                    const { Students, ...restData } = doc.data()
 
-                        attendances.push({
-                            id: doc.id,
-                            ...restData,
-                        })
+                    attendances.push({
+                        id: doc.id,
+                        ...restData,
                     })
-                    return attendances
                 })
                 return attendances
-            }
+            })
+            return attendances
         } catch (error) {
             console.error('Error listing contents:', error)
             throw error
@@ -816,21 +814,28 @@ export class CourseService {
             const uid = decodedToken.uid
             const role = await this.userService.getUserRole(token)
 
-            if (role !== 'Teacher') {
-                throw new Error('Unauthorized')
+            if (role == 'Teacher') {
+
+                const attendanceRef = this.admin.firestore().collection("course attendance").doc(attendanceId)
+                const attendanceDoc = await attendanceRef.get()
+                const attendanceData = attendanceDoc.data()
+
+                for (let i = 0; i < attendanceData.Students.length; i++) {
+                    const studentDoc = await this.admin.firestore().collection('users').doc(attendanceData.Students[i]['Student']).get()
+                    attendanceData.Students[i]['Student ID'] = studentDoc.data()['Student Info']['Student ID']
+                    attendanceData.Students[i]['Name'] = studentDoc.data()['Student Info']['Name']
+                }
+
+                return attendanceData
+            } else if (role == 'Student') {
+                const attendanceRef = this.admin.firestore().collection("course attendance").doc(attendanceId)
+                const attendanceDoc = await attendanceRef.get()
+                const attendanceData = attendanceDoc.data()
+
+                const studentData = attendanceData.Students.find(student => student.Student === uid)
+
+                return studentData
             }
-
-            const attendanceRef = this.admin.firestore().collection("course attendance").doc(attendanceId)
-            const attendanceDoc = await attendanceRef.get()
-            const attendanceData = attendanceDoc.data()
-
-            for (let i = 0; i < attendanceData.Students.length; i++) {
-                const studentDoc = await this.admin.firestore().collection('users').doc(attendanceData.Students[i]['Student']).get()
-                attendanceData.Students[i]['Student ID'] = studentDoc.data()['Student Info']['Student ID']
-                attendanceData.Students[i]['Name'] = studentDoc.data()['Student Info']['Name']
-            }
-
-            return attendanceData
         } catch (error) {
             console.error('Error listing contents:', error)
             throw error
