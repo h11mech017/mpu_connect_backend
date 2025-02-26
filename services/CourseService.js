@@ -1,5 +1,7 @@
 import { UserService } from "./UserService.js"
 import crypto from 'crypto'
+import { getMessaging } from "firebase-admin/messaging"
+import schedule from 'node-schedule'
 
 export class CourseService {
     constructor(firebaseAdmin) {
@@ -397,6 +399,42 @@ export class CourseService {
                 stream.end(file.buffer)
             }
 
+            if (assignmentData['Visible']) {
+
+                const studentRefs = await this.admin.firestore().collection("student and course")
+                    .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
+                    .where('Enrolled', '==', true)
+                    .get()
+
+                const tokens = []
+                const studentPromises = studentRefs.docs.map(async (doc) => {
+                    const studentDoc = await this.admin.firestore().collection('users').doc(doc.data()['Student']).get()
+                    const token = studentDoc.data().fcmToken
+                    if (token) {
+                        tokens.push(token)
+                    }
+                })
+
+                await Promise.all(studentPromises)
+
+                const message = {
+                    notification: {
+                        title: 'New Assignment',
+                        body: `New Assignment has been uploaded: ${assignmentData['Title']}`,
+                    },
+                    tokens: tokens,
+                }
+
+                getMessaging().sendEachForMulticast(message)
+                    .then((response) => {
+                        console.log('Successfully sent message:', response);
+                    })
+                    .catch((error) => {
+                        console.log('Error sending message:', error);
+                    });
+
+            }
+
             return true
         } catch (error) {
             console.error('Error adding assignment:', error)
@@ -445,6 +483,39 @@ export class CourseService {
                 })
 
                 stream.end(file.buffer)
+            }
+
+            if (assignmentData['Visible']) {
+
+                const studentRefs = await this.admin.firestore().collection("student and course")
+                    .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
+                    .where('Enrolled', '==', true)
+                    .get()
+
+                const tokens = []
+                const studentPromises = studentRefs.docs.map(async (doc) => {
+                    const studentDoc = await this.admin.firestore().collection('users').doc(doc.data()['Student']).get()
+                    const token = studentDoc.data().fcmToken
+                    if (token) {
+                        tokens.push(token)
+                    }
+                })
+
+                await Promise.all(studentPromises)
+
+                const message = {
+                    notification: { title: 'Assignment Update', body: `${assignmentData['Title']} has been updated` },
+                    tokens: tokens,
+                }
+
+                getMessaging().sendEachForMulticast(message)
+                    .then((response) => {
+                        console.log('Successfully sent message:', response);
+                    })
+                    .catch((error) => {
+                        console.log('Error sending message:', error);
+                    });
+
             }
 
             return true
