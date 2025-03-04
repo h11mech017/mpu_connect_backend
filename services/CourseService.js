@@ -3,6 +3,13 @@ import crypto from 'crypto'
 import { getMessaging } from "firebase-admin/messaging"
 import schedule from 'node-schedule'
 
+function firestoreTimestampToDate(timestamp) {
+    if (timestamp && typeof timestamp._seconds === 'number' && typeof timestamp._nanoseconds === 'number') {
+        return new Date(timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000);
+    }
+    return null;
+}
+
 export class CourseService {
     constructor(firebaseAdmin) {
         this.admin = firebaseAdmin
@@ -141,16 +148,21 @@ export class CourseService {
             }
 
             const announcementRef = this.admin.firestore().collection('course announcements')
-            await announcementRef.add({
+            const newAnnouncement = await announcementRef.add({
                 'Course': courseId,
                 'From': uid,
                 'Title': announcementData['Title'],
                 'Content': announcementData['Content'],
                 'Post Date': new Date(),
                 'is Test': announcementData['is Test'],
-                'Test Date': announcementData['Test Date'],
                 'is Deleted': false,
             })
+
+            if (announcementData['is Test']) {
+                await newAnnouncement.update({
+                    'Test Date': announcementData['Test Date'],
+                })
+            }
 
             return true
         } catch (error) {
@@ -451,6 +463,16 @@ export class CourseService {
             assignmentData = JSON.parse(assignmentData)
 
             const assignmentRef = this.admin.firestore().collection("courses").doc(courseId).collection("assignments").doc(assignmentId)
+            const assignmentDoc = await assignmentRef.get()
+            const assignment = assignmentDoc.data()
+
+            if (assignment.notificationJobId) {
+                const job = schedule.scheduledJobs[assignment.notificationJobId];
+                if (job) {
+                    job.cancel()
+                }
+            }
+
             await assignmentRef.update({
                 'Title': assignmentData['Title'],
                 'Detail': assignmentData['Detail'],
@@ -486,7 +508,6 @@ export class CourseService {
             }
 
             if (assignmentData['Visible']) {
-
                 const studentRefs = await this.admin.firestore().collection("student and course")
                     .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
                     .where('Enrolled', '==', true)
@@ -503,20 +524,42 @@ export class CourseService {
 
                 await Promise.all(studentPromises)
 
-                const message = {
+                let message = {}
+
+                message = {
                     notification: { title: 'Assignment Update', body: `${assignmentData['Title']} has been updated` },
                     tokens: tokens,
                 }
 
                 getMessaging().sendEachForMulticast(message)
                     .then((response) => {
-                        console.log('Successfully sent message:', response);
+                        console.log('Successfully sent message:', response)
                     })
                     .catch((error) => {
-                        console.log('Error sending message:', error);
-                    });
+                        console.log('Error sending message:', error)
+                    })
+
+                if (assignmentData['Due Date']) {
+
+                    message = {
+                        notification: { title: 'Assignment Due', body: `Attention: ${assignmentData['Title']} is due today.` },
+                        tokens: tokens,
+                    }
+
+                    const dueDate = firestoreTimestampToDate(assignmentData['Due Date'])
+                    const job = schedule.scheduleJob(dueDate, async () => {
+                        getMessaging().sendEachForMulticast(message)
+                    })
+
+                    await assignmentRef.update({
+                        'notificationJobId': job.name,
+                    })
+
+                }
 
             }
+
+
 
             return true
         } catch (error) {
@@ -1032,7 +1075,8 @@ export class CourseService {
             })
 
             await attendanceRef.update({
-                'Students': updatedStudents
+                'Students': updatedStudents,
+                'Updated At': new Date(),
             })
 
             return true
