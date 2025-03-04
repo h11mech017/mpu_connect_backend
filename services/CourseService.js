@@ -5,9 +5,9 @@ import schedule from 'node-schedule'
 
 function firestoreTimestampToDate(timestamp) {
     if (timestamp && typeof timestamp._seconds === 'number' && typeof timestamp._nanoseconds === 'number') {
-        return new Date(timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000);
+        return new Date(timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000)
     }
-    return null;
+    return null
 }
 
 export class CourseService {
@@ -162,6 +162,63 @@ export class CourseService {
                 await newAnnouncement.update({
                     'Test Date': announcementData['Test Date'],
                 })
+
+                const courseRef = this.admin.firestore().collection('courses').doc(courseId)
+                const courseDoc = await courseRef.get()
+                const courseData = courseDoc.data()
+                const courseName = courseData['Course Name']
+
+                const studentRefs = await this.admin.firestore().collection("student and course")
+                    .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
+                    .where('Enrolled', '==', true)
+                    .get()
+
+                const tokens = []
+                const studentPromises = studentRefs.docs.map(async (doc) => {
+                    const studentDoc = await this.admin.firestore().collection('users').doc(doc.data()['Student']).get()
+                    const token = studentDoc.data().fcmToken
+                    if (token) {
+                        tokens.push(token)
+                    }
+                })
+
+                await Promise.all(studentPromises)
+
+                let message = {}
+
+                message = {
+                    notification: { title: courseName, body: `"${newAnnouncement['Title']}" has been published` },
+                    tokens: tokens,
+                }
+
+                getMessaging().sendEachForMulticast(message)
+                    .then((response) => {
+                        console.log('Successfully sent message:', response)
+                    })
+                    .catch((error) => {
+                        console.log('Error sending message:', error)
+                    })
+
+                if (newAnnouncement['Test Date']) {
+
+                    message = {
+                        notification: { title: courseName, body: `Attention: ${courseName} Test will be taken tomorrow.` },
+                        tokens: tokens,
+                    }
+
+                    const testDate = firestoreTimestampToDate(newAnnouncement['Test Date']);
+                    const sendDate = new Date(testDate);
+                    sendDate.setDate(sendDate.getDate() - 1);
+
+                    const job = schedule.scheduleJob(sendDate, async () => {
+                        getMessaging().sendEachForMulticast(message)
+                    })
+
+                    await assignmentRef.update({
+                        'notificationJobId': job.name,
+                    })
+
+                }
             }
 
             return true
@@ -412,6 +469,10 @@ export class CourseService {
             }
 
             if (assignmentData['Visible']) {
+                const courseRef = this.admin.firestore().collection('courses').doc(courseId)
+                const courseDoc = await courseRef.get()
+                const courseData = courseDoc.data()
+                const courseName = courseData['Course Name']
 
                 const studentRefs = await this.admin.firestore().collection("student and course")
                     .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
@@ -429,9 +490,12 @@ export class CourseService {
 
                 await Promise.all(studentPromises)
 
-                const message = {
+
+                let message = {}
+
+                message = {
                     notification: {
-                        title: 'New Assignment',
+                        title: `${courseName} Assignment`,
                         body: `New Assignment has been uploaded: ${assignmentData['Title']}`,
                     },
                     tokens: tokens,
@@ -439,12 +503,44 @@ export class CourseService {
 
                 getMessaging().sendEachForMulticast(message)
                     .then((response) => {
-                        console.log('Successfully sent message:', response);
+                        console.log('Successfully sent message:', response)
                     })
                     .catch((error) => {
-                        console.log('Error sending message:', error);
-                    });
+                        console.log('Error sending message:', error)
+                    })
 
+                message = {
+                    notification: { title: `${courseName} Assignment`, body: `${assignmentData['Title']} has been updated` },
+                    tokens: tokens,
+                }
+
+                getMessaging().sendEachForMulticast(message)
+                    .then((response) => {
+                        console.log('Successfully sent message:', response)
+                    })
+                    .catch((error) => {
+                        console.log('Error sending message:', error)
+                    })
+
+                if (assignmentData['Due Date']) {
+
+                    message = {
+                        notification: { title: `${courseName} Assignment Due`, body: `Attention: ${assignmentData['Title']} is due tomorrow.` },
+                        tokens: tokens,
+                    }
+
+                    const dueDate = firestoreTimestampToDate(assignmentData['Due Date']);
+                    const sendDate = new Date(dueDate);
+                    sendDate.setDate(sendDate.getDate() - 1);
+
+                    const job = schedule.scheduleJob(sendDate, async () => {
+                        getMessaging().sendEachForMulticast(message)
+                    })
+
+                    await assignmentRef.update({
+                        'notificationJobId': job.name,
+                    })
+                }
             }
 
             return true
@@ -508,6 +604,12 @@ export class CourseService {
             }
 
             if (assignmentData['Visible']) {
+                const courseRef = this.admin.firestore().collection('courses').doc(courseId)
+                const courseDoc = await courseRef.get()
+                const courseData = courseDoc.data()
+                const courseName = courseData['Course Name']
+
+
                 const studentRefs = await this.admin.firestore().collection("student and course")
                     .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
                     .where('Enrolled', '==', true)
@@ -527,7 +629,7 @@ export class CourseService {
                 let message = {}
 
                 message = {
-                    notification: { title: 'Assignment Update', body: `${assignmentData['Title']} has been updated` },
+                    notification: { title: `${courseName} Assignment`, body: `${assignmentData['Title']} has been updated` },
                     tokens: tokens,
                 }
 
@@ -542,24 +644,23 @@ export class CourseService {
                 if (assignmentData['Due Date']) {
 
                     message = {
-                        notification: { title: 'Assignment Due', body: `Attention: ${assignmentData['Title']} is due today.` },
+                        notification: { title: `${courseName} Assignment Due`, body: `Attention: ${assignmentData['Title']} is due tomorrow.` },
                         tokens: tokens,
                     }
 
-                    const dueDate = firestoreTimestampToDate(assignmentData['Due Date'])
-                    const job = schedule.scheduleJob(dueDate, async () => {
+                    const dueDate = firestoreTimestampToDate(assignmentData['Due Date']);
+                    const sendDate = new Date(dueDate);
+                    sendDate.setDate(sendDate.getDate() - 1);
+
+                    const job = schedule.scheduleJob(sendDate, async () => {
                         getMessaging().sendEachForMulticast(message)
                     })
 
                     await assignmentRef.update({
                         'notificationJobId': job.name,
                     })
-
                 }
-
             }
-
-
 
             return true
         } catch (error) {
