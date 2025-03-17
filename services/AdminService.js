@@ -98,8 +98,16 @@ export class AdminService {
     async claimLostItem(itemId, data) {
         try {
             const lostItemRef = this.admin.firestore().collection('lost and found').doc(itemId);
+            const userRef = this.admin.firestore().collection('users').doc(data['Claimant ID'])
+            const userDoc = await userRef.get()
+            let userId;
+            if (userDoc.data()['Role'] === 'Student') {
+                userId = userDoc.data()['Student Info']['Student ID'];
+            } else if (userDoc.data()['Role'] === 'Teacher') {
+                userId = userDoc.data()['Teacher Info']['Teacher ID'];
+            }
             await lostItemRef.update({
-                ...data,
+                'Claimant ID': userId,
                 'Status': 'Claimed',
                 'Claim Date': new Date()
             });

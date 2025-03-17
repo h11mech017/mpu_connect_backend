@@ -63,5 +63,5 @@ export class LostAndFoundService {
         } catch (error) {
             throw new Error(error.message)
         }
-    }
+}
 }
