@@ -9,29 +9,23 @@ dotenv.config()
 const app = express()
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps)
     if (!origin) {
-      return callback(null, true);
+      return callback(null, true)
     }
 
     const allowedOrigins = [
       'https://mpu-connect-admin.pages.dev',
       'https://mpuadmin.ech017.tech'
-      // Add any other web domains if needed
     ];
 
-    // Check for mobile app specific headers or patterns
-    // This could be a custom header your Flutter app sends
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS'))
     }
   },
   credentials: true,
-  // Allow specific methods
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  // Allow specific headers including custom ones your mobile app might use
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Mobile-App']
 }))
 app.use(express.json())
