@@ -7,7 +7,33 @@ import cors from "cors"
 dotenv.config()
 
 const app = express()
-app.use(cors({ origin: "*" }))
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const allowedOrigins = [
+      'https://mpu-connect-admin.pages.dev',
+      'https://mpuadmin.ech017.tech'
+      // Add any other web domains if needed
+    ];
+
+    // Check for mobile app specific headers or patterns
+    // This could be a custom header your Flutter app sends
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  // Allow specific methods
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  // Allow specific headers including custom ones your mobile app might use
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Mobile-App']
+}))
 app.use(express.json())
 app.use("/api", setupRoutes())
 
@@ -24,7 +50,7 @@ admin.initializeApp({
     auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
     client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
   }),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET
 })
 
 const db = admin.firestore()
