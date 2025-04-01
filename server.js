@@ -16,11 +16,11 @@ app.use(cors({
     const allowedOrigins = [
       'https://mpu-connect-admin.pages.dev',
       'https://mpuadmin.ech017.tech',
-      'http://localhost:3000',
-    ];
+      'http://localhost:5173',
+    ]
 
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
+      callback(null, true)
     } else {
       callback(new Error('Not allowed by CORS'))
     }
