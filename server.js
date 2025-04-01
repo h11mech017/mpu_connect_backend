@@ -15,7 +15,8 @@ app.use(cors({
 
     const allowedOrigins = [
       'https://mpu-connect-admin.pages.dev',
-      'https://mpuadmin.ech017.tech'
+      'https://mpuadmin.ech017.tech',
+      'http://localhost:3000',
     ];
 
     if (allowedOrigins.includes(origin)) {

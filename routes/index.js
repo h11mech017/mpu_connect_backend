@@ -25,15 +25,15 @@ export function setupRoutes() {
             ];
 
             // Check file extension as a fallback
-            const fileExtension = file.originalname.split('.').pop().toLowerCase();
+            const fileExtension = file.originalname.split('.').pop().toLowerCase()
             const allowedExtensions = ['pdf', 'docx', 'zip', 'rar'];
 
             if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
                 // Accept the file
-                cb(null, true);
+                cb(null, true)
             } else {
                 // Reject the file
-                cb(new Error('Invalid file type. Only docx, pdf, zip and rar files are allowed.'), false);
+                cb(new Error('Invalid file type. Only docx, pdf, zip and rar files are allowed.'), false)
             }
         }
     })
