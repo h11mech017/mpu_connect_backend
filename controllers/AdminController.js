@@ -11,10 +11,10 @@ export class AdminController {
         }
         try {
             const isAdmin = await this.adminService.checkAdmin(token)
-            return res.status(200).send({ isAdmin })
+            res.status(200).send({ isAdmin })
         } catch (error) {
             console.error("Error in checkAdmin:", error)
-            return res.status(500).send("Internal Server Error")
+            res.status(500).send("Internal Server Error")
         }
     }
 
@@ -26,10 +26,10 @@ export class AdminController {
         }
         try {
             const isValid = await this.adminService.checkRole(token)
-            return res.status(200).send({ isValid })
+            res.status(200).send({ isValid })
         } catch (error) {
             console.error("Error in checkRole:", error)
-            return res.status(500).send("Internal Server Error")
+            res.status(500).send("Internal Server Error")
         }
     }
 
@@ -42,19 +42,20 @@ export class AdminController {
         try {
             const isAdmin = await this.adminService.checkAdmin(token)
             if (!isAdmin) {
-                return res.status(403).send("Forbidden")
+                res.status(403).send("Forbidden")
             }
 
             const applications = await this.adminService.getParkingApplications()
-            return res.status(200).send(applications)
+            res.status(200).send(applications)
         } catch (error) {
             console.error("Error in getParkingApplications:", error)
-            return res.status(500).send("Internal Server Error")
+            res.status(500).send("Internal Server Error")
         }
     }
 
     async updateParkingApplicationStatus(req, res) {
         const token = req.headers.authorization?.split("Bearer ")[1]
+        console.log(req.body)
         const { id, data } = req.body
 
         if (!token) {
@@ -63,18 +64,19 @@ export class AdminController {
         try {
             const isAdmin = await this.adminService.checkAdmin(token)
             if (!isAdmin) {
-                return res.status(403).send("Forbidden")
+                res.status(403).send("Forbidden")
             }
 
             const updated = await this.adminService.updateParkingApplicationStatus(id, data)
+            console.log(updated)
             if (updated) {
-                return res.status(200).send("Updated")
+                res.status(200).send("Updated")
             } else {
-                return res.status(500).send("Internal Server Error")
+                res.status(500).send("Internal Server Error")
             }
         } catch (error) {
             console.error("Error in updateParkingApplicationStatus:", error)
-            return res.status(500).send("Internal Server Error")
+            res.status(500).send("Internal Server Error")
         }
     }
 
@@ -85,14 +87,14 @@ export class AdminController {
 
             const isAdmin = await this.adminService.checkAdmin(token)
             if (!isAdmin) {
-                return res.status(403).send("Forbidden")
+                res.status(403).send("Forbidden")
             }
 
             await this.adminService.addLostItem(token, form)
-            return res.status(200).send("Lost item added successfully")
+            res.status(200).send("Lost item added successfully")
         } catch (error) {
             console.error("Error adding lost item:", error)
-            return res.status(500).send("Internal Server Error")
+            res.status(500).send("Internal Server Error")
         }
     }
 
@@ -106,18 +108,18 @@ export class AdminController {
         try {
             const isAdmin = await this.adminService.checkAdmin(token)
             if (!isAdmin) {
-                return res.status(403).send("Forbidden")
+                res.status(403).send("Forbidden")
             }
 
             const claimed = await this.adminService.claimLostItem(id, data)
             if (claimed) {
-                return res.status(200).send("Item Claimed")
+                res.status(200).send("Item Claimed")
             } else {
-                return res.status(500).send("Internal Server Error")
+                res.status(500).send("Internal Server Error")
             }
         } catch (error) {
-            console.error("Error in updateParkingApplicationStatus:", error)
-            return res.status(500).send("Internal Server Error")
+            console.error("Error in claimLostItem:", error)
+            res.status(500).send("Internal Server Error")
         }
     }
 }

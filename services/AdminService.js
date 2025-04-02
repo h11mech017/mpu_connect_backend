@@ -16,7 +16,7 @@ export class AdminService {
             await this.admin.auth().verifyIdToken(token)
             const role = await this.userService.getUserRole(token)
 
-            if (userDoc.exists && role === "Admin"){
+            if (userDoc.exists && role === "Admin") {
                 return true
             } else {
                 return false
@@ -52,10 +52,10 @@ export class AdminService {
             const applications = await applicationsRef.get().then((querySnapshot) => {
                 const applications = [];
                 querySnapshot.forEach((doc) => {
-                  applications.push({
-                    id: doc.id, 
-                    ...doc.data(),
-                  })
+                    applications.push({
+                        id: doc.id,
+                        ...doc.data(),
+                    })
                 })
                 return applications
             }
@@ -68,13 +68,14 @@ export class AdminService {
 
     async updateParkingApplicationStatus(applicationId, status) {
         try {
-            const applicationRef = this.admin.firestore().collection('parking').doc(applicationId);
+            const applicationRef = this.admin.firestore().collection('parking').doc(applicationId)
             await applicationRef.update({
                 'Status': status,
                 'Updated At': new Date()
             });
             return true
         } catch (error) {
+            console.error("Error in updateParkingApplicationStatus:", error)
             return false
         }
     }
