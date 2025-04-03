@@ -242,6 +242,7 @@ export class CampusService {
                 'Event Start Date': eventData['Event Start Date'],
                 'Event End Date': eventData['Event End Date'],
                 'Visible Date': eventData['Visible Date'],
+                'is Notification': eventData['is Notification'],
             })
 
             const rootPrefix = `events/${eventId}/`
