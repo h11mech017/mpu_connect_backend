@@ -89,10 +89,12 @@ export class LockerService {
                     throw new Error("You have already applied for a locker")
                 }
                 else {
-                    const faculty = userData['Student Info']['Faculty']
+                    const facultyDoc = await userData['Student Info']['Faculty'].get()
+                    const faculty = facultyDoc.data()
+                    const facultyCode = faculty['Faculty Code']
 
                     const availableLockers = await this.admin.firestore().collection("lockers")
-                        .where("Faculty", "==", faculty)
+                        .where("Faculty", "==", facultyCode)
                         .where("Status", "==", "Available")
                         .get().then((querySnapshot) => {
                             const lockers = []
