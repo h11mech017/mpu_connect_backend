@@ -59,6 +59,7 @@ export function setupRoutes() {
     //Locker routes
     router.get("/user/locker/status", async (req, res) => controllers.lockerController.getUserLocker(req, res))
     router.post("/user/locker/apply", async (req, res) => controllers.lockerController.applyForLocker(req, res))
+    router.get("/lockers", async (req, res) => controllers.lockerController.getLockers(req, res))
 
     //Lost and Found routes
     router.get("/lost/items", async (req, res) => controllers.lostAndFoundController.getLostItems(req, res))
