@@ -1180,6 +1180,7 @@ export class CourseService {
                         Status: 'Present'
                     }
                 }
+                return student
             })
 
             await attendanceRef.update({
