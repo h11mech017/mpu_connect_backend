@@ -536,7 +536,7 @@ export class CourseService {
                         getMessaging().sendEachForMulticast(message)
                     })
 
-                    await assignmentRef.update({
+                    await newAssignment.update({
                         'notificationJobId': job.name,
                     })
                 }
