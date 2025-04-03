@@ -1016,6 +1016,14 @@ export class CourseService {
                 })
                 return attendances
             })
+
+            // Sort attendance records by class date (ascending order)
+            attendances.sort((a, b) => {
+                const dateA = a['Class Date'] ? new Date(a['Class Date'].seconds * 1000) : new Date(0)
+                const dateB = b['Class Date'] ? new Date(b['Class Date'].seconds * 1000) : new Date(0)
+                return dateB - dateA
+            })
+
             return attendances
         } catch (error) {
             console.error('Error listing contents:', error)
