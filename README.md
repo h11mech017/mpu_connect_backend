@@ -168,15 +168,12 @@ MPU Connect Backend serves as the central API server for the MPU Connect ecosyst
    node server.js
    ```
 
-## Data Import Functions
-
-The server includes utility functions for importing student data and course enrollments from JSON files:
-
-- `addStudents()`: Imports student data from `students.json`
-- `addEnrolledStudents()`: Imports enrollment data from `enroll.json`
-
-Note: These functions handle the conversion of plain JavaScript objects to Firestore document references.
-
 ## License
 
-ISC
+**Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**
+
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License - see the [LICENSE](LICENSE) file for details.
+
+This license allows others to view, share, and adapt the work for non-commercial purposes, as long as they give appropriate credit to the original author. Commercial use is explicitly prohibited.
+
+This is ideal for portfolio projects where you want to showcase your work while preventing commercial exploitation.
