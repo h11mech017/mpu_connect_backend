@@ -174,6 +174,3 @@ MPU Connect Backend serves as the central API server for the MPU Connect ecosyst
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License - see the [LICENSE](LICENSE) file for details.
 
-This license allows others to view, share, and adapt the work for non-commercial purposes, as long as they give appropriate credit to the original author. Commercial use is explicitly prohibited.
-
-This is ideal for portfolio projects where you want to showcase your work while preventing commercial exploitation.
