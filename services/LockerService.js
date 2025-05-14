@@ -3,19 +3,64 @@ export class LockerService {
         this.admin = firebaseAdmin;
     }
 
+    async getLockers(page = 1, limit = 10, filters = {}) {
+        try {
+            const offset = (page - 1) * limit
+            let query = this.admin.firestore().collection("lockers")
+
+            // Apply filters if provided
+            if (filters.faculty) {
+                query = query.where("Faculty", "==", filters.faculty)
+            }
+            if (filters.status) {
+                query = query.where("Status", "==", filters.status)
+            }
+            if (filters.location) {
+                query = query.where("Location", "==", filters.location)
+            }
+
+            // Get total count for pagination metadata
+            const totalSnapshot = await query.get()
+            const total = totalSnapshot.size
+
+            // Get paginated results
+            const snapshot = await query.limit(limit).offset(offset).get()
+
+            const lockers = []
+            snapshot.forEach((doc) => {
+                lockers.push({
+                    id: doc.id,
+                    ...doc.data()
+                })
+            })
+
+            return {
+                lockers,
+                pagination: {
+                    total,
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        } catch (error) {
+            throw new Error(`Error getting paginated lockers: ${error.message}`)
+        }
+    }
+
     async getUserLocker(token) {
         try {
-            const decodedToken = await this.admin.auth().verifyIdToken(token);
-            const uid = decodedToken.uid;
+            const decodedToken = await this.admin.auth().verifyIdToken(token)
+            const uid = decodedToken.uid
 
-            const userRef = this.admin.firestore().collection("users").doc(uid);
-            const userDoc = await userRef.get();
-            const userData = userDoc.data();
+            const userRef = this.admin.firestore().collection("users").doc(uid)
+            const userDoc = await userRef.get()
+            const userData = userDoc.data()
             if (userData['Role'] === 'Student') {
                 if (userData['Student Info']['Locker']) {
-                    const lockerRef = this.admin.firestore().collection("lockers").doc(userData['Student Info']['Locker']);
-                    const lockerDoc = await lockerRef.get();
-                    const lockerData = lockerDoc.data();
+                    const lockerRef = this.admin.firestore().collection("lockers").doc(userData['Student Info']['Locker'])
+                    const lockerDoc = await lockerRef.get()
+                    const lockerData = lockerDoc.data()
                     return {
                         'Locker No': lockerDoc.id,
                         'Locker Location': lockerData['Location'],
@@ -23,7 +68,7 @@ export class LockerService {
                     }
                 }
                 else {
-                    throw new Error("You have not applied for a locker");
+                    throw new Error("You have not applied for a locker")
                 }
             }
         } catch (error) {
@@ -44,10 +89,12 @@ export class LockerService {
                     throw new Error("You have already applied for a locker")
                 }
                 else {
-                    const faculty = userData['Student Info']['Faculty']
+                    const facultyDoc = await userData['Student Info']['Faculty'].get()
+                    const faculty = facultyDoc.data()
+                    const facultyCode = faculty['Faculty Code']
 
                     const availableLockers = await this.admin.firestore().collection("lockers")
-                        .where("Faculty", "==", faculty)
+                        .where("Faculty", "==", facultyCode)
                         .where("Status", "==", "Available")
                         .get().then((querySnapshot) => {
                             const lockers = []
@@ -79,7 +126,7 @@ export class LockerService {
             }
             return false
         } catch (error) {
-            throw new Error(error.message);
+            throw new Error(error.message)
         }
     }
 }

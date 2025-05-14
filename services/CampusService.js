@@ -61,18 +61,16 @@ export class CampusService {
             let eventRefs = null
             let eventQuery = null
 
+            // For debugging, let's go back to the original approach but with better logging
             const currentDate = new Date()
-            const timestamp = {
-                _seconds: Math.floor(currentDate.getTime() / 1000),
-                _nanoseconds: (currentDate.getMilliseconds() * 1e6)
-            }
 
             if (role === true) {
+                // Admin users can see all non-deleted events
                 eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
                 eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             } else {
+                // Non-admin users should only see events with visible date <= current date
                 eventRefs = this.admin.firestore().collection("events").where("is Deleted", "==", false)
-                    .where("Visible Date", "<=", timestamp)
                 eventQuery = eventRefs.orderBy("Post Date", "desc").limit(pageSize).offset((page - 1) * pageSize)
             }
 
@@ -123,6 +121,36 @@ export class CampusService {
                 })
 
                 const events = await Promise.all(eventPromises)
+
+                // Filter events based on Visible Date for non-admin users
+                if (role !== true) {
+
+                    return events.filter(event => {
+                        const visibleDate = event['Visible Date']
+
+                        // If no visible date, show the event
+                        if (!visibleDate) return true
+
+                        // Convert Firestore timestamp to JavaScript Date
+                        let visibleDateTime
+                        if (visibleDate._seconds) {
+                            // Handle Firestore timestamp format
+                            visibleDateTime = new Date(visibleDate._seconds * 1000)
+                        } else if (visibleDate.seconds) {
+                            // Handle alternative Firestore timestamp format
+                            visibleDateTime = new Date(visibleDate.seconds * 1000)
+                        } else if (visibleDate.toDate) {
+                            // Handle Firestore Timestamp object
+                            visibleDateTime = visibleDate.toDate()
+                        } else {
+                            // Try to parse as date if it's a string
+                            visibleDateTime = new Date(visibleDate)
+                        }
+
+                        return visibleDateTime <= currentDate
+                    })
+                }
+
                 return events
             })
 
@@ -214,6 +242,7 @@ export class CampusService {
                 'Event Start Date': eventData['Event Start Date'],
                 'Event End Date': eventData['Event End Date'],
                 'Visible Date': eventData['Visible Date'],
+                'is Notification': eventData['is Notification'],
             })
 
             const rootPrefix = `events/${eventId}/`

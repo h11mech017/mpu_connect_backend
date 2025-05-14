@@ -7,7 +7,36 @@ export function setupRoutes() {
     const router = express.Router()
     const services = createServices()
     const controllers = createControllers(services)
+
+    // Regular file upload without type restrictions
     const upload = multer({ storage: multer.memoryStorage() })
+
+    // File upload with type restrictions for assignment submissions
+    const assignmentUpload = multer({
+        storage: multer.memoryStorage(),
+        fileFilter: (req, file, cb) => {
+            // Check file MIME type
+            const allowedTypes = [
+                'application/pdf', // pdf
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+                'application/zip', // zip
+                'application/x-rar-compressed', // rar
+                'application/octet-stream' // For rar files (sometimes detected as this)
+            ];
+
+            // Check file extension as a fallback
+            const fileExtension = file.originalname.split('.').pop().toLowerCase()
+            const allowedExtensions = ['pdf', 'docx', 'zip', 'rar'];
+
+            if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
+                // Accept the file
+                cb(null, true)
+            } else {
+                // Reject the file
+                cb(new Error('Invalid file type. Only docx, pdf, zip and rar files are allowed.'), false)
+            }
+        }
+    })
 
     //Admin routes
     router.get("/admin/check", async (req, res) => controllers.adminController.checkAdmin(req, res))
@@ -30,6 +59,7 @@ export function setupRoutes() {
     //Locker routes
     router.get("/user/locker/status", async (req, res) => controllers.lockerController.getUserLocker(req, res))
     router.post("/user/locker/apply", async (req, res) => controllers.lockerController.applyForLocker(req, res))
+    router.get("/lockers", async (req, res) => controllers.lockerController.getLockers(req, res))
 
     //Lost and Found routes
     router.get("/lost/items", async (req, res) => controllers.lostAndFoundController.getLostItems(req, res))
@@ -71,7 +101,7 @@ export function setupRoutes() {
     router.get("/user/courses/:courseId/assignments/:assignmentId/files", async (req, res) => controllers.courseController.getCourseAssignmentFiles(req, res))
     router.get("/user/courses/:courseId/:section/assignments/:assignmentId/submissions", async (req, res) => controllers.courseController.getAssignmentSubmissions(req, res))
     router.put("/user/courses/:courseId/assignments/:assignmentId/submissions/grading", async (req, res) => controllers.courseController.gradeAssignment(req, res))
-    router.post("/user/courses/:courseId/assignments/:assignmentId/submit", upload.single('file'), async (req, res) => controllers.courseController.submitAssignment(req, res))
+    router.post("/user/courses/:courseId/assignments/:assignmentId/submit", assignmentUpload.single('file'), async (req, res) => controllers.courseController.submitAssignment(req, res))
 
     //Attendance routes
     router.get("/user/courses/:courseId/:section/attendance", async (req, res) => controllers.courseController.getCourseAttendances(req, res))

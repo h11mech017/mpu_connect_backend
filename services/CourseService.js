@@ -158,49 +158,48 @@ export class CourseService {
                 'is Deleted': false,
             })
 
+            const courseRef = this.admin.firestore().collection('courses').doc(courseId)
+            const courseDoc = await courseRef.get()
+            const courseData = courseDoc.data()
+            const courseName = courseData['Course Name']
+
+            const studentRefs = await this.admin.firestore().collection("student and course")
+                .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
+                .where('Enrolled', '==', true)
+                .get()
+
+            const tokens = []
+            const studentPromises = studentRefs.docs.map(async (doc) => {
+                const studentDoc = await this.admin.firestore().collection('users').doc(doc.data()['Student']).get()
+                const token = studentDoc.data().fcmToken
+                if (token) {
+                    tokens.push(token)
+                }
+            })
+
+            await Promise.all(studentPromises)
+
+            let message = {}
+
+            message = {
+                notification: { title: courseName, body: `"${announcementData['Title']}" has been published` },
+                tokens: tokens,
+            }
+
+            getMessaging().sendEachForMulticast(message)
+                .then((response) => {
+                    console.log('Successfully sent message:', response)
+                })
+                .catch((error) => {
+                    console.log('Error sending message:', error)
+                })
+
             if (announcementData['is Test']) {
                 await newAnnouncement.update({
                     'Test Date': announcementData['Test Date'],
                 })
 
-                const courseRef = this.admin.firestore().collection('courses').doc(courseId)
-                const courseDoc = await courseRef.get()
-                const courseData = courseDoc.data()
-                const courseName = courseData['Course Name']
-
-                const studentRefs = await this.admin.firestore().collection("student and course")
-                    .where('Course', '==', this.admin.firestore().collection('courses').doc(courseId))
-                    .where('Enrolled', '==', true)
-                    .get()
-
-                const tokens = []
-                const studentPromises = studentRefs.docs.map(async (doc) => {
-                    const studentDoc = await this.admin.firestore().collection('users').doc(doc.data()['Student']).get()
-                    const token = studentDoc.data().fcmToken
-                    if (token) {
-                        tokens.push(token)
-                    }
-                })
-
-                await Promise.all(studentPromises)
-
-                let message = {}
-
-                message = {
-                    notification: { title: courseName, body: `"${newAnnouncement['Title']}" has been published` },
-                    tokens: tokens,
-                }
-
-                getMessaging().sendEachForMulticast(message)
-                    .then((response) => {
-                        console.log('Successfully sent message:', response)
-                    })
-                    .catch((error) => {
-                        console.log('Error sending message:', error)
-                    })
-
                 if (newAnnouncement['Test Date']) {
-
                     message = {
                         notification: { title: courseName, body: `Attention: ${courseName} Test will be taken tomorrow.` },
                         tokens: tokens,
@@ -509,19 +508,6 @@ export class CourseService {
                         console.log('Error sending message:', error)
                     })
 
-                message = {
-                    notification: { title: `${courseName} Assignment`, body: `${assignmentData['Title']} has been updated` },
-                    tokens: tokens,
-                }
-
-                getMessaging().sendEachForMulticast(message)
-                    .then((response) => {
-                        console.log('Successfully sent message:', response)
-                    })
-                    .catch((error) => {
-                        console.log('Error sending message:', error)
-                    })
-
                 if (assignmentData['Due Date']) {
 
                     message = {
@@ -537,7 +523,7 @@ export class CourseService {
                         getMessaging().sendEachForMulticast(message)
                     })
 
-                    await assignmentRef.update({
+                    await newAssignment.update({
                         'notificationJobId': job.name,
                     })
                 }
@@ -1016,6 +1002,14 @@ export class CourseService {
                 })
                 return attendances
             })
+
+            // Sort attendance records by class date (ascending order)
+            attendances.sort((a, b) => {
+                const dateA = a['Class Date'] ? new Date(a['Class Date'].seconds * 1000) : new Date(0)
+                const dateB = b['Class Date'] ? new Date(b['Class Date'].seconds * 1000) : new Date(0)
+                return dateB - dateA
+            })
+
             return attendances
         } catch (error) {
             console.error('Error listing contents:', error)
@@ -1173,6 +1167,7 @@ export class CourseService {
                         Status: 'Present'
                     }
                 }
+                return student
             })
 
             await attendanceRef.update({
