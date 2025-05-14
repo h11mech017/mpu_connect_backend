@@ -508,19 +508,6 @@ export class CourseService {
                         console.log('Error sending message:', error)
                     })
 
-                message = {
-                    notification: { title: `${courseName} Assignment`, body: `${assignmentData['Title']} has been updated` },
-                    tokens: tokens,
-                }
-
-                getMessaging().sendEachForMulticast(message)
-                    .then((response) => {
-                        console.log('Successfully sent message:', response)
-                    })
-                    .catch((error) => {
-                        console.log('Error sending message:', error)
-                    })
-
                 if (assignmentData['Due Date']) {
 
                     message = {
